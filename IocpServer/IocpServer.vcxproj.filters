@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{4dc29bd9-fe81-4554-aed3-1df1d9f9023e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\detail">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ConnectionInformation.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="Export.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="ExternalLibraries.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="IocpException.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="IocpHandler.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="IocpServer.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\Connection.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\ConnectionManager.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\IocpContext.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\SendQueue.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\SharedIocpData.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\StdAfx.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\Utils.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="detail\WorkerThread.h">
+      <Filter>source\detail</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="IocpHandler.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="IocpServer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="detail\Connection.cpp">
+      <Filter>source\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="detail\ConnectionManager.cpp">
+      <Filter>source\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="detail\IocpContext.cpp">
+      <Filter>source\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="detail\SendQueue.cpp">
+      <Filter>source\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="detail\StdAfx.cpp">
+      <Filter>source\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="detail\Utils.cpp">
+      <Filter>source\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="detail\WorkerThread.cpp">
+      <Filter>source\detail</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
