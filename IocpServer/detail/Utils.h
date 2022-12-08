@@ -39,7 +39,7 @@ namespace iocp { namespace detail {
 	AssociateDevice(HANDLE h, CSharedIocpData &iocpData);
 
 	HANDLE 
-	CreateIocp(int maxConcurrency = 0);
+	CreateIocp(int maxConcurrency = 2);
 
 	LPFN_ACCEPTEX
 	LoadAcceptEx(SOCKET s);

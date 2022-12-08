@@ -4,42 +4,42 @@ using namespace iocp;
 
 void RunNormalServer(bool sendGracefulShutdownMessage)
 {
-	boost::shared_ptr<CEchoHandler> h(
-		new CEchoHandler(sendGracefulShutdownMessage)
-		);
+    boost::shared_ptr<CEchoHandler> h(
+        new CEchoHandler(sendGracefulShutdownMessage)
+        );
 
-	//! Simple echo server that receives and sends at normal rate.
-	CIocpServer *echoServer = new CIocpServer(50000,h);
+    //! Simple echo server that receives and sends at normal rate.
+    CIocpServer *echoServer = new CIocpServer(50000,h);
 
-	// enter something in to exit
-	char c;
-	std::cin >> c;
+    // enter something in to exit
+    char c;
+    std::cin >> c;
 
-	delete echoServer;
+    delete echoServer;
 }
 
 void RunSlowReader(bool sendGracefulShutdownMessage)
 {
-	boost::shared_ptr<CEchoHandler> h(
-		new CEchoHandler(sendGracefulShutdownMessage)
-		);
+    boost::shared_ptr< CEchoHandler > h( new CEchoHandler(sendGracefulShutdownMessage ) );
 
-	//! Stress test server that receives with 1 byte buffer. This will
-	//! maximize the number of IO Completion port traffic.
-	CIocpServer *echoServer = 
-		new CIocpServer(50000,h, INADDR_ANY, 1);
+    //! Stress test server that receives with 1 byte buffer. This will
+    //! maximize the number of IO Completion port traffic.
+    CIocpServer *echoServer = new CIocpServer( 50000,
+                                               h,
+                                               INADDR_ANY,
+                                               1
+                                             );
+    // enter something in to exit
+    char c;
+    std::cin >> c;
 
-	// enter something in to exit
-	char c;
-	std::cin >> c;
-
-	delete echoServer;
+    delete echoServer;
 }
 
 int main()
 {
-	RunSlowReader(true);
-	RunNormalServer(true);
+    RunSlowReader(true);
+    //RunNormalServer(true);
 
-	return 0;
+    return 0;
 }
