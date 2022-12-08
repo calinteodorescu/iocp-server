@@ -7,9 +7,11 @@
 #define EXTERNALLIBRARIES_H_2010_09_21_23_22_49
 
 // Disable Secure SCL for performance reason.
-#define _SECURE_SCL 0
-#define _SECURE_SCL_THROWS 0
+#ifndef _DEBUG
+#define _SECURE_SCL				0
+#define _SECURE_SCL_THROWS		0
 #define _HAS_ITERATOR_DEBUGGING 0
+#endif
 
 // Exclude rarely-used stuff from Windows headers
 #define WIN32_LEAN_AND_MEAN		
@@ -24,11 +26,11 @@
 
 // Disable boost datetime warnings where it is implicitly casting integer to short.
 #pragma warning(disable:4244)
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/noncopyable.hpp>
+#include <libs/thread/include/boost/thread.hpp>
+#include <libs/bind/include/boost/bind.hpp>
+#include <libs/function/include/boost/function.hpp>
+#include <libs/config/include/boost/cstdint.hpp>
+#include <libs/core/include/boost/noncopyable.hpp>
 #pragma warning(default:4244)
 
 #include <tchar.h>
