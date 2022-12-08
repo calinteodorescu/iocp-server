@@ -43,7 +43,7 @@ void CWorkerThread::Run()
                                                              INFINITE
                                                            );
 
-        if(FALSE == completionStatus)
+        if ( FALSE == completionStatus )
         {
             HandleCompletionFailure( overlapped, 
                                      bytesTransferred, 
@@ -68,31 +68,33 @@ void CWorkerThread::Run()
     }
 }
 
-void CWorkerThread::HandleReceive( CIocpContext &rcvContext, DWORD bytesTransferred )
+void CWorkerThread::HandleReceive( CIocpContext& rcvContext,
+                                   DWORD         bytesTransferred
+                                 )
 {
-    shared_ptr<CConnection> c = 
-        m_iocpData.m_connectionManager.GetConnection(rcvContext.m_cid);
-    if(c == NULL)
+    shared_ptr< CConnection > c = m_iocpData.m_connectionManager.GetConnection( rcvContext.m_cid );
+    if ( c == nullptr )
     {
         assert(false);
+
         return;
     }
 
     // If nothing is transferred, we are about to be disconnected. In this
     // case, don't notify the client that nothing is received because
     // they are about to get a disconnection callback.
-    if(0 != bytesTransferred)
+    if ( 0 != bytesTransferred )
     {
         // Shrink the buffer to fit the byte transferred
-        rcvContext.m_data.resize(bytesTransferred);
+        rcvContext.m_data.resize( bytesTransferred );
         assert(rcvContext.m_data.size() == bytesTransferred);
 
-        if(m_iocpData.m_iocpHandler != NULL)
+        if ( m_iocpData.m_iocpHandler != NULL )
         {
             // Invoke the callback for the client
-            m_iocpData.m_iocpHandler->OnReceiveData(
-                rcvContext.m_cid,
-                rcvContext.m_data);
+            m_iocpData.m_iocpHandler->OnReceiveData( rcvContext.m_cid,
+                                                     rcvContext.m_data
+                                                   );
         }
     }
 

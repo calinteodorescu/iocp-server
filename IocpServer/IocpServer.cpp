@@ -4,6 +4,7 @@
 //! http://www.boost.org/LICENSE_1_0.txt)
 
 #include "StdAfx.h"
+
 #include "IocpServer.h"
 #include "IocpException.h"
 
@@ -21,11 +22,11 @@ public:
 
     enum { DefaultRcvBufferSize = 4096 };
 
-    CImpl( uint16_t                 port,
-           shared_ptr<CIocpHandler> iocpHandler,
-           uint32_t                 addressToListenOn,
-           uint32_t                 rcvbufferSize,
-           uint32_t                 numThread
+    CImpl( uint16_t                   port,
+           shared_ptr< CIocpHandler > iocpHandler,
+           uint32_t                   addressToListenOn,
+           uint32_t                   rcvbufferSize,
+           uint32_t                   numThread
          )
     {
         // Initialize the port binding/listening first before setting the
@@ -40,9 +41,9 @@ public:
         m_iocpData.m_iocpHandler = iocpHandler;
     }
     
-    ~CImpl()
+    ~CImpl( )
     {
-        Uninitialize();
+        Uninitialize( );
     }
 
     void Initialize( uint32_t addressToListenOn, 
@@ -80,7 +81,7 @@ public:
             // Always uninitialize everything here upon all exception.
             // This is to ensure that we don't leak any resources upon
             // construction failure.
-            Uninitialize();
+            Uninitialize( );
 
             // Re-throw to notify the clients.
             throw;
@@ -115,9 +116,10 @@ public:
 
         if (NULL == m_iocpData.m_ioCompletionPort)
         {
-            throw CWin32Exception(WSAGetLastError());
+            throw CWin32Exception( ::WSAGetLastError( ) );
         }
     }
+
     void InitializeWinsock() 
     {
         // Initialize Winsock
@@ -138,34 +140,45 @@ public:
             ::closesocket(m_iocpData.m_listenSocket);
         }
 
-        //Overlapped I/O follows the model established in Windows and can be performed only on 
-        //sockets created through the WSASocket function 
-        m_iocpData.m_listenSocket = detail::CreateOverlappedSocket();
-
-        if (INVALID_SOCKET == m_iocpData.m_listenSocket) 
         {
-            throw CWin32Exception(WSAGetLastError());
-        }
+            //Overlapped I/O follows the model established in Windows and can be performed only on 
+            //sockets created through the WSASocket function 
+            m_iocpData.m_listenSocket = ::WSASocket( AF_INET, 
+                                                     SOCK_STREAM, 
+                                                     IPPROTO_TCP, 
+                                                     NULL, 
+                                                     0, 
+                                                     WSA_FLAG_OVERLAPPED
+                                                   );
 
-        //Cleanup and Init with 0 the ServerAddress
-        struct sockaddr_in serverAddress;
-        ZeroMemory((char *)&serverAddress, sizeof(serverAddress));
+            if ( INVALID_SOCKET == m_iocpData.m_listenSocket ) 
+            {
+                throw CWin32Exception( ::WSAGetLastError( ) );
+            }
 
-        //Fill up the address structure
-        serverAddress.sin_family = AF_INET;
-        serverAddress.sin_addr.s_addr = addressToListenOn;
-        serverAddress.sin_port = htons(portNumber);    //comes from commandline
+            //Cleanup and Init with 0 the ServerAddress
+            struct sockaddr_in serverAddress;
+            ZeroMemory((char *)&serverAddress, sizeof(serverAddress));
 
-        //Assign local address and port number
-        if (SOCKET_ERROR == ::bind(
-            m_iocpData.m_listenSocket, 
-            (struct sockaddr *) &serverAddress, 
-            sizeof(serverAddress))) 
-        {
-            closesocket(m_iocpData.m_listenSocket);
-            m_iocpData.m_listenSocket = INVALID_SOCKET;
+            //Fill up the address structure
+            {
+                serverAddress.sin_family      = AF_INET;
+                serverAddress.sin_addr.s_addr = addressToListenOn;
+                serverAddress.sin_port        = htons( portNumber );    //comes from commandline
+            }
 
-            throw CWin32Exception(WSAGetLastError());
+            //Assign local address and port number
+            if ( SOCKET_ERROR == ::bind( m_iocpData.m_listenSocket, 
+                                         ( struct sockaddr* ) & serverAddress, 
+                                         sizeof( serverAddress )
+                                       )
+               )
+            {
+                ::closesocket( m_iocpData.m_listenSocket );
+                m_iocpData.m_listenSocket = INVALID_SOCKET;
+
+                throw CWin32Exception( ::WSAGetLastError( ) );
+            }
         }
 
         //! @remark
@@ -173,23 +186,27 @@ public:
         //! If set to SOMAXCONN, the underlying service provider responsible 
         //! for socket s will set the backlog to a maximum reasonable value. 
         //! There is no standard provision to obtain the actual backlog value.
-        if (SOCKET_ERROR == listen(m_iocpData.m_listenSocket,SOMAXCONN))
+        if ( SOCKET_ERROR == ::listen( m_iocpData.m_listenSocket,
+                                       SOMAXCONN
+                                     )
+           )
         {
-            closesocket(m_iocpData.m_listenSocket);
+            ::closesocket( m_iocpData.m_listenSocket );
             m_iocpData.m_listenSocket = INVALID_SOCKET;
 
-            throw CWin32Exception(WSAGetLastError());
+            throw CWin32Exception( ::WSAGetLastError( ) );
         }
 
         m_iocpData.m_acceptExFn = detail::LoadAcceptEx( m_iocpData.m_listenSocket );
 
-        if(NULL == m_iocpData.m_acceptExFn)
+        if ( NULL == m_iocpData.m_acceptExFn )
         {
-            throw CWin32Exception(GetLastError());
+            throw CWin32Exception( ::GetLastError( ) );
         }
 
-        detail::AssociateDevice((HANDLE)m_iocpData.m_listenSocket,m_iocpData);
-
+        detail::AssociateDevice( ( HANDLE ) m_iocpData.m_listenSocket,
+                                 m_iocpData
+                               );
     }
 
     void InitializeAcceptEvent()
@@ -199,13 +216,13 @@ public:
         detail::PostAccept( m_iocpData );
     }
 
-    void Uninitialize()
+    void Uninitialize( )
     {
-        if(INVALID_HANDLE_VALUE != m_iocpData.m_shutdownEvent)
+        if ( INVALID_HANDLE_VALUE != m_iocpData.m_shutdownEvent )
         {
             // Set the shutdown event so all worker threads can quit when
             // they unblock.
-            SetEvent(m_iocpData.m_shutdownEvent);
+            SetEvent( m_iocpData.m_shutdownEvent );
         }
 
         //! @remark
@@ -214,22 +231,20 @@ public:
 
         // Close all socket handles to flush out all pending overlapped
         // I/O operation.
-        m_iocpData.m_connectionManager.CloseAllConnections();
+        m_iocpData.m_connectionManager.CloseAllConnections( );
 
         // Give out a NULL completion status to help unblock all worker
         // threads. This is retract all I/O request made to the threads, and
         // it may not be a graceful shutdown. It is the user's job to
         // graceful shutdown all connection before shutting down the server.
-        ThreadPool_t::iterator itr = m_threadPool.begin();
-        for (; m_threadPool.end() != itr; ++itr)
+        for( const auto& thread : m_threadPool )
         {
             //Help threads get out of blocking - GetQueuedCompletionStatus()
-            PostQueuedCompletionStatus(
-                m_iocpData.m_ioCompletionPort, 
-                0, 
-                (DWORD) 
-                NULL, 
-                NULL);
+            ::PostQueuedCompletionStatus( m_iocpData.m_ioCompletionPort, 
+                                          0, 
+                                          ( DWORD ) NULL, 
+                                          NULL
+                                        );
         }
 
         //! @remark
@@ -242,30 +257,30 @@ public:
         //! Windows Vista, this is no longer necessary: threads can now issue 
         //! requests and terminate; the request will still be processed and 
         //! the result will be queued to the completion port.
-        m_threadPool.clear();
+        m_threadPool.clear( );
 
-        if(INVALID_SOCKET != m_iocpData.m_listenSocket)
+        if ( INVALID_SOCKET != m_iocpData.m_listenSocket )
         {
-            closesocket(m_iocpData.m_listenSocket);
+            ::closesocket( m_iocpData.m_listenSocket );
             m_iocpData.m_listenSocket = INVALID_SOCKET;
         }
 
-        if(INVALID_HANDLE_VALUE != m_iocpData.m_shutdownEvent)
+        if ( INVALID_HANDLE_VALUE != m_iocpData.m_shutdownEvent )
         {
-            CloseHandle(m_iocpData.m_shutdownEvent);
+            ::CloseHandle( m_iocpData.m_shutdownEvent );
             m_iocpData.m_shutdownEvent = INVALID_HANDLE_VALUE;
         }
 
-        if(INVALID_HANDLE_VALUE != m_iocpData.m_ioCompletionPort)
+        if ( INVALID_HANDLE_VALUE != m_iocpData.m_ioCompletionPort )
         {
-            CloseHandle(m_iocpData.m_ioCompletionPort);
+            ::CloseHandle( m_iocpData.m_ioCompletionPort );
             m_iocpData.m_ioCompletionPort = INVALID_HANDLE_VALUE;
         }
 
-        if(m_iocpData.m_iocpHandler != NULL)
+        if ( m_iocpData.m_iocpHandler != NULL )
         {
-            m_iocpData.m_iocpHandler->OnServerClose(0);
-            m_iocpData.m_iocpHandler.reset();
+            m_iocpData.m_iocpHandler->OnServerClose( 0 );
+            m_iocpData.m_iocpHandler.reset( );
         }
     }
 

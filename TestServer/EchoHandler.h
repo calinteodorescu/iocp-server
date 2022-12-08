@@ -42,19 +42,17 @@ public:
                                 )
     {
         // critical section
-        {
-            mutex::scoped_lock l(m_mutex);
-            tcout << "New Connection  " 
-                  << std::hex << cid 
-                  << std::dec << _T(" from ") 
-                  << c.m_remoteHostName << _T(":") << c.m_remotePortNumber
-                  << std::endl
-            ;
+        mutex::scoped_lock l(m_mutex);
+        tcout << "New Connection  " 
+                << std::hex << cid 
+                << std::dec << _T(" from ") 
+                << c.m_remoteHostName << _T(":") << c.m_remotePortNumber
+                << std::endl
+        ;
 
-            assert(m_statistics.find(cid) == m_statistics.end());
+        assert( m_statistics.find( cid ) == m_statistics.end( ) );
 
-            m_statistics[cid];
-        }
+        m_statistics[ cid ];
     }
 
     //! @details

@@ -120,7 +120,7 @@ namespace iocp { namespace detail {
     void PostAccept( CSharedIocpData& iocpData ) 
     {
         DWORD bytesReceived_ = 0;
-        DWORD addressSize    = sizeof(sockaddr_in) + 16;
+        DWORD addressSize    = sizeof( sockaddr_in ) + 16;
 
         if ( iocpData.m_acceptExFn( iocpData.m_listenSocket,                // listen socket
                                     iocpData.m_acceptContext.m_socket,      // accept socket
@@ -128,7 +128,7 @@ namespace iocp { namespace detail {
                                     0,                                      // receive data length = 0 for no receive on accept
                                     addressSize,                            // local address length
                                     addressSize,                            // remote address length
-                                    &bytesReceived_,
+                                    & bytesReceived_,
                                     & iocpData.m_acceptContext
                                   ) == FALSE
            )

@@ -4,30 +4,27 @@
 //! http://www.boost.org/LICENSE_1_0.txt)
 
 #include "StdAfx.h"
+
 #include "IocpHandler.h"
 #include "IocpServer.h"
 
-namespace iocp {
-
+namespace iocp 
+{
 
 void CIocpHandler::OnNewConnection( uint64_t, ConnectionInformation const & )
 {
-
 }
 
 void CIocpHandler::OnServerError( int /*errorCode*/ )
 {
-
 }
 
 void CIocpHandler::OnSentData( uint64_t /*cid*/, uint64_t /*byteTransferred*/ )
 {
-
 }
 
 void CIocpHandler::OnReceiveData( uint64_t /*cid*/, std::vector<uint8_t> const &/*data*/ )
 {
-
 }
 
 void iocp::CIocpHandler::OnClientDisconnect( uint64_t cid, int32_t )
@@ -48,18 +45,16 @@ void iocp::CIocpHandler::OnClientDisconnect( uint64_t cid, int32_t )
 
 void CIocpHandler::OnServerClose( int32_t /*errorCode*/ )
 {
-
 }
 
 void CIocpHandler::OnDisconnect( uint64_t /*cid*/, int32_t /*errorcode*/)
 {
-
 }
 
 
-CIocpServer & CIocpHandler::GetIocpServer()
+CIocpServer& CIocpHandler::GetIocpServer( )
 {
-	return *m_iocpServer;
+	return * m_iocpServer;
 }
 
 } // end namespace

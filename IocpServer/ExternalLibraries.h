@@ -22,24 +22,24 @@
 #include <Mswsock.h>
 
 #include "Export.h"
+
 #include <iostream>
 
 // Disable boost datetime warnings where it is implicitly casting integer to short.
 #pragma warning(disable:4244)
+
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/noncopyable.hpp>
+
 #pragma warning(default:4244)
 
 #include <tchar.h>
 
-
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
-
-
 
 namespace iocp
 {
