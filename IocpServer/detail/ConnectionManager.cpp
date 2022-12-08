@@ -4,6 +4,7 @@
 //! http://www.boost.org/LICENSE_1_0.txt)
 
 #include "StdAfx.h"
+
 #include "ConnectionManager.h"
 #include "Connection.h"
 
@@ -45,11 +46,9 @@ void CConnectionManager::CloseAllConnections()
 {
 	mutex::scoped_lock lock(m_mutex);
 
-	ConnMap_t::iterator itr = m_connMap.begin();
-	while(m_connMap.end() != itr)
+	for( auto& connection : m_connMap )
 	{
-		CancelIo((HANDLE)itr->second->m_socket);
-		++itr;
+		::CancelIo( ( HANDLE ) connection.second->m_socket );
 	}
 }
 } } // end namespace

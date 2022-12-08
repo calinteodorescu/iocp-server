@@ -318,8 +318,7 @@ public:
 
     void Shutdown( uint64_t cid, int how )
     {
-        shared_ptr<detail::CConnection> connection = 
-            m_iocpData.m_connectionManager.GetConnection(cid);
+        shared_ptr<detail::CConnection> connection = m_iocpData.m_connectionManager.GetConnection(cid);
 
         if(connection == NULL)
         {
@@ -332,8 +331,7 @@ public:
 
     void Disconnect( uint64_t cid)
     {
-        shared_ptr<detail::CConnection> c = 
-            m_iocpData.m_connectionManager.GetConnection(cid);
+        shared_ptr<detail::CConnection> c = m_iocpData.m_connectionManager.GetConnection( cid );
 
         if(c == NULL)
         {
