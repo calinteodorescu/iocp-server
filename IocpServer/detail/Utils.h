@@ -7,7 +7,7 @@
 
 #include "../ConnectionInformation.h"
 
-namespace iocp { namespace detail { class CSharedIocpData; } };
+namespace iocp { namespace detail { class CIOCPServerControl; } };
 namespace iocp { namespace detail { class CIocpContext; } };
 namespace iocp { namespace detail { class CConnection; } };
 
@@ -18,16 +18,16 @@ namespace detail
     int                   sGetNumIocpThreads       ( void );
     SOCKET                sCreateOverlappedSocket  ( void );
     ConnectionInformation sGetConnectionInformation( SOCKET socket );
-    void                  sPostAccept              ( CSharedIocpData& iocpData );
-    int                   sPostRecv                ( CIocpContext&    iocpContext );
-    int                   sPostSend                ( CIocpContext&    iocpContext );
-    int                   sPostDisconnect          ( CSharedIocpData& iocpData,
-                                                     CConnection&     c
+    void                  sPostAccept              ( CIOCPServerControl& iocpServerControl );
+    int                   sPostRecv                ( CIocpContext&       iocpContext );
+    int                   sPostSend                ( CIocpContext&       iocpContext );
+    int                   sPostDisconnect          ( CIOCPServerControl& iocpServerControl,
+                                                     CConnection&        c
+                                                   );                    
+    void                  sAssociateDevice         ( HANDLE              h,
+                                                     CIOCPServerControl& iocpServerControl
                                                    );
-    void                  sAssociateDevice         ( HANDLE           h,
-                                                     CSharedIocpData& iocpData
-                                                   );
-    HANDLE                sCreateIocp              ( int                maxConcurrency = 2 );
+    HANDLE                sCreateIocp              ( int                 maxConcurrency = 2 );
     
     LPFN_ACCEPTEX         sLoadAcceptEx            ( SOCKET s );
 }

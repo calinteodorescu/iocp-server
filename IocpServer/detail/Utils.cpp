@@ -120,38 +120,38 @@ ConnectionInformation sGetConnectionInformation( SOCKET socket )
     return ci;
 }
 
-void sPostAccept( CSharedIocpData& iocpData ) 
+void sPostAccept( CIOCPServerControl& iocpServerControl ) 
 {
     DWORD bytesReceived_ = 0;
     DWORD addressSize    = sizeof( sockaddr_in ) + 16;
 
-    if ( iocpData.m_acceptExFn( iocpData.m_listenSocket,                // listen socket
-                                iocpData.m_acceptContext.m_socket,      // accept socket
-                                & iocpData.m_acceptContext.m_data[ 0 ], // holds local/remote address
-                                0,                                      // receive data length = 0 for no receive on accept
-                                addressSize,                            // local address length
-                                addressSize,                            // remote address length
-                                & bytesReceived_,
-                                & iocpData.m_acceptContext
-                              ) == FALSE
+    if ( iocpServerControl.m_acceptExFn( iocpServerControl.m_listenSocket,                // listen socket
+                                         iocpServerControl.m_acceptContext.m_socket,      // accept socket
+                                         & iocpServerControl.m_acceptContext.m_data[ 0 ], // holds local/remote address
+                                         0,                                               // receive data length = 0 for no receive on accept
+                                         addressSize,                                     // local address length
+                                         addressSize,                                     // remote address length
+                                         & bytesReceived_,
+                                         & iocpServerControl.m_acceptContext
+                                       ) == FALSE
        )
     {
         DWORD lastError = GetLastError( );
         if ( lastError != ERROR_IO_PENDING )
         {
-            if ( iocpData.m_iocpHandler != NULL )
+            if ( iocpServerControl.m_iocpHandler != NULL )
             {
-                iocpData.m_iocpHandler->OnServerError( lastError );
+                iocpServerControl.m_iocpHandler->OnServerError( lastError );
             }
         }
     }
     else
     {
-        ::PostQueuedCompletionStatus( iocpData.m_ioCompletionPort, 
+        ::PostQueuedCompletionStatus( iocpServerControl.m_ioCompletionPort, 
                                       0, 
                                       ( DWORD ) 
-                                      ( ULONG_PTR ) & iocpData, 
-                                      & iocpData.m_acceptContext
+                                      ( ULONG_PTR ) & iocpServerControl, 
+                                      & iocpServerControl.m_acceptContext
                                     );
     }
 }
@@ -199,20 +199,20 @@ int sPostSend( CIocpContext &iocpContext )
     return WSA_IO_PENDING;
 }
 
-void sAssociateDevice( HANDLE           h, 
-                       CSharedIocpData& iocpData
+void sAssociateDevice( HANDLE              h, 
+                       CIOCPServerControl& iocpServerControl
                      ) 
 {
     if ( ::CreateIoCompletionPort( h, 
-                                   iocpData.m_ioCompletionPort, 
-                                   ( ULONG_PTR ) & iocpData, 
+                                   iocpServerControl.m_ioCompletionPort, 
+                                   ( ULONG_PTR ) & iocpServerControl, 
                                    0
-                                 ) != iocpData.m_ioCompletionPort
+                                 ) != iocpServerControl.m_ioCompletionPort
        )
     {
-        if ( iocpData.m_iocpHandler != NULL )
+        if ( iocpServerControl.m_iocpHandler != NULL )
         {
-            iocpData.m_iocpHandler->OnServerError( ::GetLastError( ) );
+            iocpServerControl.m_iocpHandler->OnServerError( ::GetLastError( ) );
         }
     }
 }
@@ -240,8 +240,8 @@ int sGetNumIocpThreads( )
     return si.dwNumberOfProcessors * 2;
 }
 
-int sPostDisconnect( CSharedIocpData& iocpData,
-                     CConnection&     c
+int sPostDisconnect( CIOCPServerControl& iocpServerControl,
+                     CConnection&        c
                    )
 {
     CIocpContext* disconnectContext = new CIocpContext( c.m_socket, 
@@ -251,9 +251,9 @@ int sPostDisconnect( CSharedIocpData& iocpData,
                                                       );
 
     //Help threads get out of blocking - GetQueuedCompletionStatus()
-    if ( ::PostQueuedCompletionStatus( iocpData.m_ioCompletionPort,
+    if ( ::PostQueuedCompletionStatus( iocpServerControl.m_ioCompletionPort,
                                        0, 
-                                       ( ULONG_PTR )    & iocpData, 
+                                       ( ULONG_PTR )    & iocpServerControl, 
                                        ( LPOVERLAPPED ) disconnectContext
                                      ) == FALSE
        )

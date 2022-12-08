@@ -16,10 +16,10 @@ namespace iocp
 namespace detail
 {
 
-class CSharedIocpData : boost::noncopyable
+class CIOCPServerControl : boost::noncopyable
 {
 public:
-    CSharedIocpData() 
+    CIOCPServerControl() 
     :     m_shutdownEvent   ( INVALID_HANDLE_VALUE )
         , m_ioCompletionPort( INVALID_HANDLE_VALUE )
         , m_listenSocket    ( INVALID_SOCKET )
