@@ -18,42 +18,41 @@ class CIocpContext : public OVERLAPPED
 {
 public:
 
-	enum Type
-	{ 
-		Rcv,
-		Send,
-		Accept,
-		Disconnect,
-	};
+    enum Type
+    { 
+        Rcv,
+        Send,
+        Accept,
+        Disconnect,
+    };
 
+    CIocpContext( SOCKET             socket, 
+                  uint64_t           cid, 
+                  CIocpContext::Type t, 
+                  uint32_t           rcvBufferSize
+                );
 
-	CIocpContext(
-		SOCKET socket, 
-		uint64_t cid, 
-		CIocpContext::Type t, 
-		uint32_t rcvBufferSize);
+    ~CIocpContext( );
 
-	~CIocpContext();
+    //! Reset the WSA buffer. Should be called each time the context is used.
+    void ResetWsaBuf( );
 
-	//! Reset the WSA buffer. Should be called each time the context is used.
-	void ResetWsaBuf();
+    //! the actual buffer that holds all the data
+    std::vector<uint8_t> m_data;
 
-	//! the actual buffer that holds all the data
-	std::vector<uint8_t> m_data;
+    //! ptr to the winsock buffer (which points to m_data)
+    WSABUF m_wsaBuffer;
 
-	//! ptr to the winsock buffer (which points to m_data)
-	WSABUF m_wsaBuffer;
+    //! the socket for this connection
+    SOCKET m_socket;
 
-	//! the socket for this connection
-	SOCKET m_socket;
+    //! connection id
+    uint64_t m_cid;
 
-	//! connection id
-	uint64_t m_cid;
+    //! the type of iocp context
+    Type m_type;
 
-	//! the type of iocp context
-	Type m_type;
-
-	uint32_t m_rcvBufferSize;
+    uint32_t m_rcvBufferSize;
 };
 
 } } // end namespace

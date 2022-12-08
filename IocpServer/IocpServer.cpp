@@ -12,7 +12,8 @@
 #include "detail/Connection.h"
 #include "detail/Utils.h"
 
-namespace iocp {
+namespace iocp
+{
 
 class CIocpServer::CImpl
 {
@@ -20,17 +21,21 @@ public:
 
     enum { DefaultRcvBufferSize = 4096 };
 
-    CImpl(uint16_t port,
-        shared_ptr<CIocpHandler> iocpHandler,
-        uint32_t addressToListenOn,
-        uint32_t rcvbufferSize,
-        uint32_t numThread
-        )
+    CImpl( uint16_t                 port,
+           shared_ptr<CIocpHandler> iocpHandler,
+           uint32_t                 addressToListenOn,
+           uint32_t                 rcvbufferSize,
+           uint32_t                 numThread
+         )
     {
         // Initialize the port binding/listening first before setting the
         // handler. This way, we will never fire callbacks prematurely
         // to the user when the server is partially constructed.
-        Initialize(addressToListenOn, port, rcvbufferSize, numThread);
+        Initialize( addressToListenOn, 
+                    port, 
+                    rcvbufferSize, 
+                    numThread
+                  );
 
         m_iocpData.m_iocpHandler = iocpHandler;
     }
@@ -40,15 +45,15 @@ public:
         Uninitialize();
     }
 
-    void Initialize(
-        uint32_t addressToListenOn, 
-        uint16_t port, 
-        uint32_t rcvbufferSize, 
-        uint32_t numThread)
+    void Initialize( uint32_t addressToListenOn, 
+                     uint16_t port, 
+                     uint32_t rcvbufferSize, 
+                     uint32_t numThread
+                   )
     {
         try
         {
-            if(0 == rcvbufferSize)
+            if ( 0 == rcvbufferSize )
             {
                 m_iocpData.m_rcvBufferSize = DefaultRcvBufferSize;
             }
@@ -57,21 +62,18 @@ public:
                 m_iocpData.m_rcvBufferSize = rcvbufferSize;
             }
 
-            m_iocpData.m_shutdownEvent = CreateEvent(
-                NULL,  // lpEventAttributes
-                TRUE,  // bManualReset
-                FALSE, // bInitialState
-                NULL); // lpName
-
-            InitializeWinsock();
-
-            InitializeIocp();
-
-            InitializeThreadPool(numThread);
-
-            InitializeSocket(addressToListenOn, port);
-
-            InitializeAcceptEvent();
+            m_iocpData.m_shutdownEvent = ::CreateEvent( NULL,  // lpEventAttributes
+                                                        TRUE,  // bManualReset
+                                                        FALSE, // bInitialState
+                                                        NULL
+                                                      ); // lpName
+            InitializeWinsock    ( );
+            InitializeIocp       ( );
+            InitializeThreadPool ( numThread );
+            InitializeSocket     ( addressToListenOn,
+                                   port
+                                 );
+            InitializeAcceptEvent( );
         }
         catch (...)
         {
@@ -85,24 +87,27 @@ public:
         }
     }
 
-    void InitializeThreadPool(uint32_t numThread) 
+    void InitializeThreadPool( uint32_t numThread ) 
     {
-        if(0 == numThread)
+        if ( 0 == numThread )
         {
-            numThread = detail::GetNumIocpThreads();
+            numThread = detail::GetNumIocpThreads( );
         }
 
-        m_threadPool.reserve(numThread);
+        m_threadPool.reserve( numThread );
 
-        for(uint32_t i=0; i<numThread; ++i)
+        for( uint32_t i = 0
+             ;
+             i < numThread
+             ;
+             ++i
+           )
         {
-            m_threadPool.push_back(shared_ptr<detail::CWorkerThread>(
-                new detail::CWorkerThread(m_iocpData)) 
-                );
+            m_threadPool.push_back( shared_ptr<detail::CWorkerThread>( new detail::CWorkerThread( m_iocpData ) ) );
         }
     }
 
-    void InitializeIocp() 
+    void InitializeIocp( ) 
     {
         //Create I/O completion port
         // See http://msdn.microsoft.com/en-us/library/aa363862%28VS.85%29.aspx
@@ -130,7 +135,7 @@ public:
     {
         if (INVALID_SOCKET != m_iocpData.m_listenSocket)
         {
-            closesocket(m_iocpData.m_listenSocket);
+            ::closesocket(m_iocpData.m_listenSocket);
         }
 
         //Overlapped I/O follows the model established in Windows and can be performed only on 
@@ -176,8 +181,7 @@ public:
             throw CWin32Exception(WSAGetLastError());
         }
 
-        m_iocpData.m_acceptExFn = 
-            detail::LoadAcceptEx(m_iocpData.m_listenSocket);
+        m_iocpData.m_acceptExFn = detail::LoadAcceptEx( m_iocpData.m_listenSocket );
 
         if(NULL == m_iocpData.m_acceptExFn)
         {
@@ -190,10 +194,9 @@ public:
 
     void InitializeAcceptEvent()
     {
-        m_iocpData.m_acceptContext.m_socket = 
-            detail::CreateOverlappedSocket();
+        m_iocpData.m_acceptContext.m_socket = detail::CreateOverlappedSocket( );
 
-        detail::PostAccept(m_iocpData);
+        detail::PostAccept( m_iocpData );
     }
 
     void Uninitialize()
@@ -342,9 +345,7 @@ public:
 
     detail::CSharedIocpData m_iocpData;
 
-    typedef std::vector <
-        shared_ptr<detail::CWorkerThread>
-    > ThreadPool_t;
+    typedef std::vector < shared_ptr<detail::CWorkerThread>> ThreadPool_t;
 
     ThreadPool_t m_threadPool;
 

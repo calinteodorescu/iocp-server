@@ -24,7 +24,7 @@ void RunSlowReader(bool sendGracefulShutdownMessage)
 
     //! Stress test server that receives with 1 byte buffer. This will
     //! maximize the number of IO Completion port traffic.
-    CIocpServer *echoServer = new CIocpServer( 50000,
+    CIocpServer* echoServer = new CIocpServer( 23456,
                                                h,
                                                INADDR_ANY,
                                                1

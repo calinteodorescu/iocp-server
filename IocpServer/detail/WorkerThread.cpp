@@ -14,10 +14,13 @@
 
 namespace iocp { namespace detail {
 
-CWorkerThread::CWorkerThread(CSharedIocpData &iocpData)
-: m_iocpData(iocpData)
+CWorkerThread::CWorkerThread( CSharedIocpData& iocpData )
+:   m_iocpData( iocpData )
 {
-    m_thread = thread(bind(&CWorkerThread::Run, this));
+    m_thread = thread( bind( & CWorkerThread::Run,
+                             this
+                           )
+                     );
 }
 
 CWorkerThread::~CWorkerThread()
@@ -250,25 +253,35 @@ void CWorkerThread::HandleAccept( CIocpContext &acceptContext, DWORD bytesTransf
     }
 }
 
-void CWorkerThread::HandleIocpContext(CIocpContext &iocpContext, 
-                                      DWORD bytesTransferred )
+void CWorkerThread::HandleIocpContext( CIocpContext& iocpContext, 
+                                       DWORD         bytesTransferred
+                                     )
 {
-    switch(iocpContext.m_type)
+    switch ( iocpContext.m_type )
     {
-    case CIocpContext::Rcv:
-        HandleReceive(iocpContext, bytesTransferred);
-        break;
-    case CIocpContext::Send:
-        HandleSend(iocpContext, bytesTransferred);
-        break;
-    case CIocpContext::Accept:
-        HandleAccept(iocpContext, bytesTransferred);
-        break;
-    case CIocpContext::Disconnect:
-        HandleDisconnect(iocpContext);
-        break;
-    default:
-        assert(false);
+        case CIocpContext::Rcv:
+            HandleReceive( iocpContext,
+                           bytesTransferred
+                         );
+            break;
+        case CIocpContext::Send:
+            HandleSend( iocpContext,
+                        bytesTransferred
+                      );
+            break;
+        case CIocpContext::Accept:
+            HandleAccept( iocpContext, 
+                          bytesTransferred
+                        );
+            break;
+        case CIocpContext::Disconnect:
+            HandleDisconnect( iocpContext );
+
+            break;
+        default:
+            assert( false );
+
+            break;
     }
 }
 
