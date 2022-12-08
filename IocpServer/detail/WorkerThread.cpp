@@ -45,7 +45,10 @@ void CWorkerThread::Run()
 
         if(FALSE == completionStatus)
         {
-            HandleCompletionFailure(overlapped, bytesTransferred, GetLastError());
+            HandleCompletionFailure( overlapped, 
+                                     bytesTransferred, 
+                                     ::GetLastError( )
+                                   );
             continue;
         }
 
@@ -57,10 +60,11 @@ void CWorkerThread::Run()
             break;
         }
 
-        CIocpContext &iocpContext = 
-            *reinterpret_cast<CIocpContext *>(overlapped);
+        CIocpContext& iocpContext = * reinterpret_cast< CIocpContext* >( overlapped );
 
-        HandleIocpContext(iocpContext, bytesTransferred);
+        HandleIocpContext( iocpContext,
+                           bytesTransferred
+                         );
     }
 }
 
@@ -173,62 +177,69 @@ void CWorkerThread::HandleSend( CIocpContext &iocpContext, DWORD bytesTransferre
     }
 }
 
-void CWorkerThread::HandleAccept( CIocpContext &acceptContext, DWORD bytesTransferred )
+void CWorkerThread::HandleAccept( CIocpContext& acceptContext,
+                                  DWORD         bytesTransferred
+                                )
 {
     // We should be accepting immediately without waiting for any data.
     // If this has change, we need to account for that accept buffer and post
     // it to the receive side.
-    assert(0 == bytesTransferred);
+    assert( 0 == bytesTransferred );
 
     // Update the socket option with SO_UPDATE_ACCEPT_CONTEXT so that
     // getpeername will work on the accept socket.
-    if(setsockopt(
-        acceptContext.m_socket, 
-        SOL_SOCKET, 
-        SO_UPDATE_ACCEPT_CONTEXT, 
-        (char *)&m_iocpData.m_listenSocket, 
-        sizeof(m_iocpData.m_listenSocket)
-        ) != 0)
+    if ( ::setsockopt( acceptContext.m_socket, 
+                       SOL_SOCKET, 
+                       SO_UPDATE_ACCEPT_CONTEXT, 
+                       ( char* ) & m_iocpData.m_listenSocket, 
+                       sizeof( m_iocpData.m_listenSocket )
+                     ) != 0
+       )
     {
-        if(m_iocpData.m_iocpHandler != NULL)
+        if ( m_iocpData.m_iocpHandler != NULL )
         {
             // This shouldn't happen, but if it does, report the error. 
             // Since the connection has not been established, it is not necessary
             // to notify the client to remove any connections.
-            m_iocpData.m_iocpHandler->OnServerError(WSAGetLastError());
+            m_iocpData.m_iocpHandler->OnServerError( ::WSAGetLastError( ) );
         }
     }
     // If the socket is up, allocate the connection and notify the client.
     else
     {
-        ConnectionInformation cinfo = 
-            GetConnectionInformation(acceptContext.m_socket);
+        ConnectionInformation cinfo = GetConnectionInformation( acceptContext.m_socket );
 
-        shared_ptr<CConnection> c(new CConnection(
-            acceptContext.m_socket, 
-            m_iocpData.GetNextId(),
-            m_iocpData.m_rcvBufferSize
-            ));
+        shared_ptr< CConnection > c( new CConnection( acceptContext.m_socket, 
+                                                      m_iocpData.GetNextId(),
+                                                      m_iocpData.m_rcvBufferSize
+                                                    )
+                                   );
 
-        m_iocpData.m_connectionManager.AddConnection(c);
+        m_iocpData.m_connectionManager.AddConnection( c );
 
-        AssociateDevice((HANDLE)c->m_socket, m_iocpData);
+        AssociateDevice( ( HANDLE ) c->m_socket,
+                         m_iocpData
+                       );
 
-        if(m_iocpData.m_iocpHandler != NULL)
+        if ( m_iocpData.m_iocpHandler != NULL )
         {
-            m_iocpData.m_iocpHandler->OnNewConnection(c->m_id, cinfo);
+            m_iocpData.m_iocpHandler->OnNewConnection( c->m_id,
+                                                       cinfo
+                                                     );
         }
 
-        int lasterror = PostRecv(c->m_rcvContext);
+        int lasterror = PostRecv( c->m_rcvContext );
 
         // Failed to post a queue a receive context. It is likely that the
         // connection is already terminated at this point (by user or client).
         // In such case, just remove the connection.
-        if( WSA_IO_PENDING != lasterror)
+        if ( WSA_IO_PENDING != lasterror )
         {
-            if(true == c->CloseRcvContext())
+            if( true == c->CloseRcvContext( ) )
             {
-                PostDisconnect(m_iocpData, *c);
+                PostDisconnect( m_iocpData,
+                                * c
+                              );
             }
         }
     }
@@ -238,17 +249,17 @@ void CWorkerThread::HandleAccept( CIocpContext &acceptContext, DWORD bytesTransf
     //! For higher performance, it is possible to preallocate these sockets
     //! and have a pool of accept context waiting. That adds complexity, and
     //! unnecessary for now.
-    acceptContext.m_socket = CreateOverlappedSocket();
+    acceptContext.m_socket = CreateOverlappedSocket( );
 
-    if(INVALID_SOCKET != acceptContext.m_socket)
+    if ( INVALID_SOCKET != acceptContext.m_socket )
     {
-        PostAccept(m_iocpData);
+        PostAccept( m_iocpData );
     }
     else
     {
-        if(m_iocpData.m_iocpHandler != NULL)
+        if ( m_iocpData.m_iocpHandler != NULL )
         {
-            m_iocpData.m_iocpHandler->OnServerError(WSAGetLastError());
+            m_iocpData.m_iocpHandler->OnServerError( ::WSAGetLastError( ) );
         }
     }
 }
