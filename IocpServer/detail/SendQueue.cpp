@@ -22,22 +22,24 @@ void CSendQueue::AddSendContext( shared_ptr<CIocpContext> sendContext )
 {
 	mutex::scoped_lock l(m_mutex);
 
-	bool inserted = m_sendContextMap.insert(
-		std::make_pair(sendContext.get(), sendContext)
-		).second;
+	bool inserted = m_sendContextMap.insert( std::make_pair( sendContext.get(), sendContext ) ).second;
+
 	assert(true == inserted);
 }
 
 int CSendQueue::RemoveSendContext( CIocpContext* sendContext )
 {
 	mutex::scoped_lock l(m_mutex);
-	m_sendContextMap.erase(sendContext);
+
+	m_sendContextMap.erase( sendContext );
+
 	return m_sendContextMap.size();
 }
 
 uint32_t CSendQueue::NumOutstandingContext()
 {
 	mutex::scoped_lock l(m_mutex);
+
 	return m_sendContextMap.size();
 }
 

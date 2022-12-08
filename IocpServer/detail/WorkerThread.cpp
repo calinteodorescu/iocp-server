@@ -55,7 +55,7 @@ void CWorkerThread::Run()
         // NULL key packet is a special status that unblocks the worker
         // thread to initial a shutdown sequence. The thread should be going
         // down soon.
-        if(NULL == key)
+        if ( NULL == key )
         {
             break;
         }

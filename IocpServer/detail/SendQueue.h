@@ -3,35 +3,42 @@
 //! (See accompanying file LICENSE_1_0.txt or copy at
 //! http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef SENDQUEUE_H_2010_09_26_12_39_06
-#define SENDQUEUE_H_2010_09_26_12_39_06
+#pragma once
 
-namespace iocp { namespace detail { class CIocpContext; } };
+#include <map>
+#include <boost/smart_ptr/shared_ptr.hpp>
 
-namespace iocp { namespace detail {
+namespace iocp 
+{ 
+namespace detail 
+{ 
+class CIocpContext;
+}
+};
+
+namespace iocp
+{ 
+namespace detail 
+{
 
 class CSendQueue
 {
 public:
 	~CSendQueue();
 
-	void AddSendContext(shared_ptr<CIocpContext> sendContext);
-
-	int RemoveSendContext(CIocpContext *sendContext);
-
-	void CloseAllSends();
+	void AddSendContext   ( ::boost::shared_ptr<CIocpContext> sendContext);
+	int  RemoveSendContext( CIocpContext*			sendContext );
+	void CloseAllSends    ( );
 
 	uint32_t NumOutstandingContext();
 
 private:
-	typedef std::map<
-		CIocpContext *, shared_ptr<CIocpContext> 
-	> SendContextMap_t;
+	using SendContextMap_t = std::map< CIocpContext*, shared_ptr<CIocpContext> >;
 
 	SendContextMap_t m_sendContextMap;
 
 	mutex m_mutex;
 };
 
-} } // end namespace
-#endif // SENDQUEUE_H_2010_09_26_12_39_06
+}
+} // end namespace

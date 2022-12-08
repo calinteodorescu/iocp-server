@@ -269,10 +269,11 @@ public:
         }
     }
 
-    void Send(uint64_t cid, std::vector<uint8_t> &data )
+    void Send( uint64_t cid,
+               std::vector<uint8_t>& data
+             )
     {
-        shared_ptr<detail::CConnection> connection = 
-            m_iocpData.m_connectionManager.GetConnection(cid);
+        shared_ptr<detail::CConnection> connection = m_iocpData.m_connectionManager.GetConnection(cid);
         
         if(connection == NULL)
         {
@@ -280,17 +281,17 @@ public:
             return;
         }
 
-        shared_ptr<detail::CIocpContext> sendContext = 
-            connection->CreateSendContext();
+        shared_ptr<detail::CIocpContext> sendContext = connection->CreateSendContext();
 
         // Take over user's data here and post it to the completion port.
         sendContext->m_data.swap(data);
         sendContext->ResetWsaBuf();
 
-        int lastError = detail::PostSend(*sendContext);
-        if(WSA_IO_PENDING != lastError)
+        int lastError = detail::PostSend( * sendContext );
+
+        if ( WSA_IO_PENDING != lastError )
         {
-            connection->m_sendQueue.RemoveSendContext(sendContext.get());
+            connection->m_sendQueue.RemoveSendContext( sendContext.get( ) );
             
             // Undo the swap here before throwing. This way, the user's
             // data is untouched and they may proceed to recover.
@@ -380,17 +381,17 @@ CIocpServer::~CIocpServer()
 
 void CIocpServer::Send(uint64_t cid, std::vector<uint8_t> &data )
 {
-    return m_impl->Send(cid, data);
+    return m_impl->Send( cid, data );
 }
 
 void CIocpServer::Shutdown( uint64_t cid, int how )
 {
-    return m_impl->Shutdown(cid, how);
+    return m_impl->Shutdown( cid, how );
 }
 
 void CIocpServer::Disconnect( uint64_t cid)
 {
-    return m_impl->Disconnect(cid);
+    return m_impl->Disconnect( cid );
 }
 
 } // end namespace
