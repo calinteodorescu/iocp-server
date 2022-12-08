@@ -284,7 +284,7 @@ public:
         }
     }
 
-    void Send( uint64_t cid,
+    void Send( uint64_t              cid,
                std::vector<uint8_t>& data
              )
     {
@@ -365,7 +365,6 @@ public:
 
     std::vector<uint8_t> outputBuffer_;
 };
-
 
 CIocpServer::CIocpServer( uint16_t                 port,
                           shared_ptr<CIocpHandler> iocpHandler,

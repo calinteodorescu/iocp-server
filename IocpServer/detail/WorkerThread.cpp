@@ -107,28 +107,31 @@ void CWorkerThread::HandleReceive( CIocpContext& rcvContext,
 
     // 0 bytes transferred, or if a recv context can't be posted to the 
     // IO completion port, that implies the socket at least half-closed.
-    if( (0 == bytesTransferred) || 
-        WSA_IO_PENDING != (lastError = PostRecv(rcvContext)) )
+    if( ( 0 == bytesTransferred )
+        || 
+        WSA_IO_PENDING != ( lastError = PostRecv( rcvContext ) )
+      )
     {
         uint64_t cid = rcvContext.m_cid;
-        if (c->CloseRcvContext() == true)
+        if ( c->CloseRcvContext( ) == true )
         {
-            ::shutdown(c->m_socket, SD_RECEIVE);
+            ::shutdown( c->m_socket, SD_RECEIVE );
 
-            if(m_iocpData.m_iocpHandler != NULL)
+            if ( m_iocpData.m_iocpHandler != NULL )
             {
-                m_iocpData.m_iocpHandler->OnClientDisconnect(
-                    cid,
-                    lastError);
+                m_iocpData.m_iocpHandler->OnClientDisconnect( cid,
+                                                              lastError
+                                                            );
             }
         }
     }
 }
 
-void CWorkerThread::HandleSend( CIocpContext &iocpContext, DWORD bytesTransferred )
+void CWorkerThread::HandleSend( CIocpContext& iocpContext, 
+                                DWORD         bytesTransferred
+                              )
 {
-    shared_ptr<CConnection> c = 
-        m_iocpData.m_connectionManager.GetConnection(iocpContext.m_cid);
+    shared_ptr<CConnection> c = m_iocpData.m_connectionManager.GetConnection( iocpContext.m_cid );
     if(c == NULL)
     {
         assert(false);
@@ -137,11 +140,13 @@ void CWorkerThread::HandleSend( CIocpContext &iocpContext, DWORD bytesTransferre
 
     uint64_t cid = iocpContext.m_cid;
 
-    if(bytesTransferred > 0 )
+    if ( bytesTransferred > 0 )
     {
-        if(m_iocpData.m_iocpHandler != NULL)
+        if ( m_iocpData.m_iocpHandler != NULL )
         {
-            m_iocpData.m_iocpHandler->OnSentData(cid, bytesTransferred);
+            m_iocpData.m_iocpHandler->OnSentData( cid,
+                                                  bytesTransferred
+                                                );
         }
     }
     //No bytes transferred, that means send has failed.
@@ -155,16 +160,18 @@ void CWorkerThread::HandleSend( CIocpContext &iocpContext, DWORD bytesTransferre
     //! there is a race condition where a disconnect context maybe waiting 
     //! for the send queue to go to zero at the same time. In this case,
     //! the disconnect notification will come before we notify the user.
-    int outstandingSend = c->m_sendQueue.RemoveSendContext(&iocpContext);
+    int outstandingSend = c->m_sendQueue.RemoveSendContext( & iocpContext );
 
     // If there is no outstanding send context, that means all sends 
     // are completed for the moment. At this point, if we have a half-closed 
     // socket, and the connection is pending to be disconnected, post a 
     // disconnect context for a graceful shutdown.
-    if(0 == outstandingSend)
+    if ( 0 == outstandingSend )
     {
-        if( (::InterlockedExchangeAdd(&c->m_rcvClosed, 0) > 0) &&
-            (::InterlockedExchangeAdd(&c->m_disconnectPending, 0) > 0) )
+        if ( ( ::InterlockedExchangeAdd( & c->m_rcvClosed, 0 ) > 0 ) 
+             &&
+             ( ::InterlockedExchangeAdd( & c->m_disconnectPending, 0 ) > 0 )
+           )
         {
             // Disconnect context is special (hacked) because it is not
             // tied to a connection. During graceful shutdown, it is very
@@ -174,7 +181,9 @@ void CWorkerThread::HandleSend( CIocpContext &iocpContext, DWORD bytesTransferre
             // wouldn't know it unless mutex are used. To keep it as 
             // lock-free as possible, the disconnect handler
             // will gracefully handle redundant disconnect context.
-            PostDisconnect(m_iocpData, *c);
+            PostDisconnect( m_iocpData,
+                            * c
+                          );
         }
     }
 }
