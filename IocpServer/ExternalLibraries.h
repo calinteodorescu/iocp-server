@@ -26,11 +26,11 @@
 
 // Disable boost datetime warnings where it is implicitly casting integer to short.
 #pragma warning(disable:4244)
-#include <libs/thread/include/boost/thread.hpp>
-#include <libs/bind/include/boost/bind.hpp>
-#include <libs/function/include/boost/function.hpp>
-#include <libs/config/include/boost/cstdint.hpp>
-#include <libs/core/include/boost/noncopyable.hpp>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/noncopyable.hpp>
 #pragma warning(default:4244)
 
 #include <tchar.h>

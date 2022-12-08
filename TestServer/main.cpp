@@ -38,8 +38,8 @@ void RunSlowReader(bool sendGracefulShutdownMessage)
 
 int main()
 {
-	//RunSlowReader(false);
-	RunNormalServer(false);
+	RunSlowReader(true);
+	RunNormalServer(true);
 
 	return 0;
 }
