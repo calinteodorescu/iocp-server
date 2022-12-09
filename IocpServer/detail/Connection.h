@@ -30,7 +30,7 @@ public:
     long m_rcvClosed;  
 
     CIocpOperation m_rcvOperation;
-    CSendQueue     m_sendQueue;
+    CSendQueue     m_queuedForExecutionSendOperations;
     CIocpOperation m_disconnectOperation;
     mutex          m_connectionMutex;
 };

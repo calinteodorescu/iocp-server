@@ -18,11 +18,11 @@ CSendQueue::~CSendQueue()
 	CloseAllSends();
 }
 
-void CSendQueue::AddSendOperation( shared_ptr<CIocpOperation> sendOperation )
+void CSendQueue::QueueForExecutionSendOperation( shared_ptr<CIocpOperation> sendOperation )
 {
 	mutex::scoped_lock l(m_mutex);
 
-	bool inserted = m_sendOperationMap.insert( std::make_pair( sendOperation.get(), sendOperation ) ).second;
+	bool inserted = m_queuedForExecutionSendOperations.insert( std::make_pair( sendOperation.get(), sendOperation ) ).second;
 
 	assert(true == inserted);
 }
@@ -31,31 +31,29 @@ int CSendQueue::RemoveSendOperation( CIocpOperation* sendOperation )
 {
 	mutex::scoped_lock l(m_mutex);
 
-	m_sendOperationMap.erase( sendOperation );
+	m_queuedForExecutionSendOperations.erase( sendOperation );
 
-	return m_sendOperationMap.size();
+	return m_queuedForExecutionSendOperations.size();
 }
 
 uint32_t CSendQueue::NumOutstandingOperation()
 {
 	mutex::scoped_lock l(m_mutex);
 
-	return m_sendOperationMap.size();
+	return m_queuedForExecutionSendOperations.size();
 }
 
 void CSendQueue::CloseAllSends()
 {
 	mutex::scoped_lock l(m_mutex);
 
-	SendOperationMap_t::iterator itr = m_sendOperationMap.begin();
-	while(m_sendOperationMap.end() != itr)
+	for( auto& sendOperation : m_queuedForExecutionSendOperations )
 	{
-		if(INVALID_HANDLE_VALUE != itr->second->hEvent)
+		if ( INVALID_HANDLE_VALUE != sendOperation.second->hEvent )
 		{
-			CloseHandle(itr->second->hEvent);
-			itr->second->hEvent = INVALID_HANDLE_VALUE;
+			CloseHandle( sendOperation.second->hEvent);
+			sendOperation.second->hEvent = INVALID_HANDLE_VALUE;
 		}
-		++itr;
 	}
 }
 } } // end namespace

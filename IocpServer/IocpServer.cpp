@@ -306,7 +306,7 @@ public:
 
         if ( WSA_IO_PENDING != lastError )
         {
-            connection->m_sendQueue.RemoveSendOperation( sendOperation.get( ) );
+            connection->m_queuedForExecutionSendOperations.RemoveSendOperation( sendOperation.get( ) );
             
             // Undo the swap here before throwing. This way, the user's
             // data is untouched and they may proceed to recover.

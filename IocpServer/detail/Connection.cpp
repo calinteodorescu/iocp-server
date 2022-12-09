@@ -30,10 +30,10 @@ CConnection::CConnection( SOCKET   socket,
                              rcvBufferSize
                            )
     , m_disconnectOperation( m_socket, 
-                           m_id, 
-                           CIocpOperation::Disconnect, 
-                           0
-                         )
+                             m_id, 
+                             CIocpOperation::Disconnect, 
+                             0
+                           )
 {    
 }
 
@@ -42,16 +42,16 @@ CConnection::~CConnection()
     closesocket(m_socket);
 }
 
-shared_ptr<CIocpOperation> CConnection::CreateSendOperation()
+shared_ptr<CIocpOperation> CConnection::CreateSendOperation( )
 {
     shared_ptr<CIocpOperation> c( new CIocpOperation( m_socket, 
-                                                       m_id, 
-                                                       CIocpOperation::Send,
-                                                       0
-                                                     )
-                                 );
+                                                      m_id, 
+                                                      CIocpOperation::Send,
+                                                      0
+                                                    )
+                                );
 
-    m_sendQueue.AddSendOperation( c );
+    m_queuedForExecutionSendOperations.QueueForExecutionSendOperation( c );
 
     return c;
 }
@@ -64,7 +64,7 @@ bool CConnection::HasOutstandingOperation()
         return true;
     }
 
-    if(m_sendQueue.NumOutstandingOperation() > 0)
+    if(m_queuedForExecutionSendOperations.NumOutstandingOperation() > 0)
     {
         return true;
     }
@@ -75,13 +75,14 @@ bool CConnection::HasOutstandingOperation()
 
 bool CConnection::CloseRcvOperation()
 {
-    if (0 == ::InterlockedExchange(&m_rcvClosed, 1))
+    if ( 0 == ::InterlockedExchange( & m_rcvClosed, 1 ) )
     {
-        if(INVALID_HANDLE_VALUE != m_rcvOperation.hEvent )
+        if ( INVALID_HANDLE_VALUE != m_rcvOperation.hEvent )
         {
-            CloseHandle(m_rcvOperation.hEvent);
+            ::CloseHandle( m_rcvOperation.hEvent );
             m_rcvOperation.hEvent = INVALID_HANDLE_VALUE;
         }
+
         return true;
     }
 

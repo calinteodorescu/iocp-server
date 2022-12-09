@@ -160,7 +160,7 @@ void CWorkerThread::HandleSend( CIocpOperation& iocpOperation,
     //! there is a race condition where a disconnect context maybe waiting 
     //! for the send queue to go to zero at the same time. In this case,
     //! the disconnect notification will come before we notify the user.
-    int outstandingSend = c->m_sendQueue.RemoveSendOperation( & iocpOperation );
+    int outstandingSend = c->m_queuedForExecutionSendOperations.RemoveSendOperation( & iocpOperation );
 
     // If there is no outstanding send context, that means all sends 
     // are completed for the moment. At this point, if we have a half-closed 
