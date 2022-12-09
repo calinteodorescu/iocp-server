@@ -136,7 +136,7 @@ void sPostAccept( CIOCPServerControl& iocpControlAsServer )
                                          ) == FALSE
        )
     {
-        DWORD lastError = GetLastError( );
+        DWORD lastError = ::GetLastError( );
         if ( lastError != ERROR_IO_PENDING )
         {
             if ( iocpControlAsServer.m_iocpHandler != NULL )
