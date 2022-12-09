@@ -24,8 +24,8 @@ CIocpOperation::CIocpOperation( SOCKET             socket,
 {
     switch ( t )
     {
-        case Rcv:
-        case Accept:
+        case OpRcv:
+        case OpAccept:
         {
             m_data.resize( m_rcvBufferSize );
 

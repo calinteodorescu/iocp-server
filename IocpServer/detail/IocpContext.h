@@ -20,10 +20,10 @@ public:
 
     enum Type
     { 
-        Rcv,
-        Send,
-        Accept,
-        Disconnect,
+        OpRcv,
+        OpSend,
+        OpAccept,
+        OpDisconnect,
     };
 
     CIocpOperation( SOCKET               socket, 

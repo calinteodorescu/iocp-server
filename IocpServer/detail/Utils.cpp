@@ -165,8 +165,8 @@ int sPostRecv( CIocpOperation& iocpOperation )
     if ( ::WSARecv( iocpOperation.m_socket,
                     & iocpOperation.m_wsaBuffer, 
                     1, 
-                    &dwBytes, 
-                    &dwFlags, 
+                    & dwBytes, 
+                    & dwFlags, 
                     & iocpOperation, 
                     NULL
                   ) == SOCKET_ERROR
@@ -246,7 +246,7 @@ int sPostDisconnect( CIOCPServerControl& iocpControlAsServer,
 {
     CIocpOperation* disconnectOperation = new CIocpOperation( c.m_socket, 
                                                               c.m_id, 
-                                                              CIocpOperation::Disconnect,
+                                                              CIocpOperation::OpDisconnect,
                                                               0
                                                             );
 

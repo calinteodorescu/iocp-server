@@ -25,7 +25,7 @@ public:
         , m_listenSocket    ( INVALID_SOCKET )
         , m_acceptOperation ( INVALID_SOCKET,
                               0,
-                              CIocpOperation::Accept,
+                              CIocpOperation::OpAccept,
                               4096
                             )
         , m_rcvBufferSize   ( 0 )

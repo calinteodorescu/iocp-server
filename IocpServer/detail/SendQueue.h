@@ -26,11 +26,10 @@ class CSendQueue
 public:
     ~CSendQueue();
 
-    void QueueForExecutionSendOperation( ::boost::shared_ptr<CIocpOperation> sendOperation);
-    int  RemoveSendOperation           ( CIocpOperation*                     sendOperation );
-    void CloseAllSends                 ( );
-
-    uint32_t NumOutstandingOperation();
+    void   QueueForExecutionSendOperation( ::boost::shared_ptr<CIocpOperation> sendOperation);
+    size_t RemoveSendOperation           ( CIocpOperation*                     sendOperation );
+    void   CloseAllSends                 ( void );
+    size_t NumOutstandingOperation       ( void );
 
 private:
     using SendOperationMap_t = std::map< CIocpOperation*, shared_ptr<CIocpOperation> >;

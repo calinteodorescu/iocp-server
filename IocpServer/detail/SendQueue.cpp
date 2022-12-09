@@ -27,7 +27,7 @@ void CSendQueue::QueueForExecutionSendOperation( shared_ptr<CIocpOperation> send
 	assert(true == inserted);
 }
 
-int CSendQueue::RemoveSendOperation( CIocpOperation* sendOperation )
+size_t CSendQueue::RemoveSendOperation( CIocpOperation* sendOperation )
 {
 	mutex::scoped_lock l(m_mutex);
 
@@ -36,7 +36,7 @@ int CSendQueue::RemoveSendOperation( CIocpOperation* sendOperation )
 	return m_queuedForExecutionSendOperations.size();
 }
 
-uint32_t CSendQueue::NumOutstandingOperation()
+size_t CSendQueue::NumOutstandingOperation()
 {
 	mutex::scoped_lock l(m_mutex);
 

@@ -26,12 +26,12 @@ CConnection::CConnection( SOCKET   socket,
     , m_rcvClosed          ( false )
     , m_rcvOperation       ( m_socket, 
                              m_id,
-                             CIocpOperation::Rcv,
+                             CIocpOperation::OpRcv,
                              rcvBufferSize
                            )
     , m_disconnectOperation( m_socket, 
                              m_id, 
-                             CIocpOperation::Disconnect, 
+                             CIocpOperation::OpDisconnect, 
                              0
                            )
 {    
@@ -46,7 +46,7 @@ shared_ptr<CIocpOperation> CConnection::CreateSendOperation( )
 {
     shared_ptr<CIocpOperation> c( new CIocpOperation( m_socket, 
                                                       m_id, 
-                                                      CIocpOperation::Send,
+                                                      CIocpOperation::OpSend,
                                                       0
                                                     )
                                 );

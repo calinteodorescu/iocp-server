@@ -281,22 +281,22 @@ void CWorkerThread::HandleIocpOperation( CIocpOperation& iocpOperation,
 {
     switch ( iocpOperation.m_type )
     {
-        case CIocpOperation::Rcv:
+        case CIocpOperation::OpRcv:
             HandleReceive( iocpOperation,
                            bytesTransferred
                          );
             break;
-        case CIocpOperation::Send:
+        case CIocpOperation::OpSend:
             HandleSend( iocpOperation,
                         bytesTransferred
                       );
             break;
-        case CIocpOperation::Accept:
+        case CIocpOperation::OpAccept:
             HandleAccept( iocpOperation, 
                           bytesTransferred
                         );
             break;
-        case CIocpOperation::Disconnect:
+        case CIocpOperation::OpDisconnect:
             HandleDisconnect( iocpOperation );
 
             break;
