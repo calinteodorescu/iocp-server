@@ -23,9 +23,9 @@ public:
     :     m_shutdownEvent   ( INVALID_HANDLE_VALUE )
         , m_ioCompletionPort( INVALID_HANDLE_VALUE )
         , m_listenSocket    ( INVALID_SOCKET )
-        , m_acceptContext   ( INVALID_SOCKET,
+        , m_acceptOperation ( INVALID_SOCKET,
                               0,
-                              CIocpContext::Accept,
+                              CIocpOperation::Accept,
                               4096
                             )
         , m_rcvBufferSize   ( 0 )
@@ -52,7 +52,7 @@ public:
 
     CConnectionManager       m_connectionManager;
     shared_ptr<CIocpHandler> m_iocpHandler;
-    CIocpContext             m_acceptContext;
+    CIocpOperation           m_acceptOperation;
     uint32_t                 m_rcvBufferSize;
 
     LPFN_ACCEPTEX            m_acceptExFn;

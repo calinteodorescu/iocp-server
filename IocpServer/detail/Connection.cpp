@@ -19,19 +19,19 @@ CConnection::CConnection( SOCKET   socket,
                           uint64_t cid, 
                           uint32_t rcvBufferSize
                         )
-:    m_socket( socket )
-    , m_id               ( cid )
-    , m_disconnectPending( false )
-    , m_sendClosePending ( false )
-    , m_rcvClosed        ( false )
-    , m_rcvContext       ( m_socket, 
-                           m_id,
-                           CIocpContext::Rcv,
-                           rcvBufferSize
-                         )
-    , m_disconnectContext( m_socket, 
+:     m_socket             ( socket )
+    , m_id                 ( cid )
+    , m_disconnectPending  ( false )
+    , m_sendClosePending   ( false )
+    , m_rcvClosed          ( false )
+    , m_rcvOperation       ( m_socket, 
+                             m_id,
+                             CIocpOperation::Rcv,
+                             rcvBufferSize
+                           )
+    , m_disconnectOperation( m_socket, 
                            m_id, 
-                           CIocpContext::Disconnect, 
+                           CIocpOperation::Disconnect, 
                            0
                          )
 {    
@@ -42,21 +42,21 @@ CConnection::~CConnection()
     closesocket(m_socket);
 }
 
-shared_ptr<CIocpContext> CConnection::CreateSendContext()
+shared_ptr<CIocpOperation> CConnection::CreateSendOperation()
 {
-    shared_ptr<CIocpContext> c (new CIocpContext(
-        m_socket, 
-        m_id, 
-        CIocpContext::Send,
-        0)
-        );
+    shared_ptr<CIocpOperation> c( new CIocpOperation( m_socket, 
+                                                       m_id, 
+                                                       CIocpOperation::Send,
+                                                       0
+                                                     )
+                                 );
 
-    m_sendQueue.AddSendContext(c);
+    m_sendQueue.AddSendOperation( c );
 
     return c;
 }
 
-bool CConnection::HasOutstandingContext()
+bool CConnection::HasOutstandingOperation()
 {
 
     if(::InterlockedExchangeAdd(&m_rcvClosed, 0) == 0)
@@ -64,7 +64,7 @@ bool CConnection::HasOutstandingContext()
         return true;
     }
 
-    if(m_sendQueue.NumOutstandingContext() > 0)
+    if(m_sendQueue.NumOutstandingOperation() > 0)
     {
         return true;
     }
@@ -73,14 +73,14 @@ bool CConnection::HasOutstandingContext()
 }
 
 
-bool CConnection::CloseRcvContext()
+bool CConnection::CloseRcvOperation()
 {
     if (0 == ::InterlockedExchange(&m_rcvClosed, 1))
     {
-        if(INVALID_HANDLE_VALUE != m_rcvContext.hEvent )
+        if(INVALID_HANDLE_VALUE != m_rcvOperation.hEvent )
         {
-            CloseHandle(m_rcvContext.hEvent);
-            m_rcvContext.hEvent = INVALID_HANDLE_VALUE;
+            CloseHandle(m_rcvOperation.hEvent);
+            m_rcvOperation.hEvent = INVALID_HANDLE_VALUE;
         }
         return true;
     }

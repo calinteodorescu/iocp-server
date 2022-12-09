@@ -12,11 +12,11 @@ namespace iocp
 namespace detail 
 {
 
-CIocpContext::CIocpContext( SOCKET             socket, 
-                            uint64_t           cid, 
-                            CIocpContext::Type t,
-                            uint32_t           rcvBufferSize
-                          )
+CIocpOperation::CIocpOperation( SOCKET             socket, 
+                                uint64_t           cid, 
+                                CIocpOperation::Type t,
+                                uint32_t           rcvBufferSize
+                              )
 :   m_socket         ( socket )
     , m_cid          ( cid )
     , m_type         ( t )
@@ -40,11 +40,11 @@ CIocpContext::CIocpContext( SOCKET             socket,
     memset(this, 0, sizeof(OVERLAPPED));
 }
 
-CIocpContext::~CIocpContext()
+CIocpOperation::~CIocpOperation()
 {
 }
 
-void CIocpContext::ResetWsaBuf()
+void CIocpOperation::ResetWsaBuf()
 {
     m_wsaBuffer.buf = reinterpret_cast< char* >( & m_data[ 0 ] );
     m_wsaBuffer.len = static_cast<u_long>( m_data.size( ) * sizeof( m_data[ 0 ] ) );

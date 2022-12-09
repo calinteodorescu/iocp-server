@@ -211,7 +211,7 @@ public:
 
     void InitializeAcceptEvent()
     {
-        m_iocpServerControl.m_acceptContext.m_socket = detail::sCreateOverlappedSocket( );
+        m_iocpServerControl.m_acceptOperation.m_socket = detail::sCreateOverlappedSocket( );
 
         detail::sPostAccept( m_iocpServerControl );
     }
@@ -296,21 +296,21 @@ public:
             return;
         }
 
-        shared_ptr<detail::CIocpContext> sendContext = connection->CreateSendContext();
+        shared_ptr<detail::CIocpOperation> sendOperation = connection->CreateSendOperation();
 
         // Take over user's data here and post it to the completion port.
-        sendContext->m_data.swap(data);
-        sendContext->ResetWsaBuf();
+        sendOperation->m_data.swap(data);
+        sendOperation->ResetWsaBuf();
 
-        int lastError = detail::sPostSend( * sendContext );
+        int lastError = detail::sPostSend( * sendOperation );
 
         if ( WSA_IO_PENDING != lastError )
         {
-            connection->m_sendQueue.RemoveSendContext( sendContext.get( ) );
+            connection->m_sendQueue.RemoveSendOperation( sendOperation.get( ) );
             
             // Undo the swap here before throwing. This way, the user's
             // data is untouched and they may proceed to recover.
-            data.swap(sendContext->m_data);
+            data.swap(sendOperation->m_data);
 
             throw CWin32Exception( lastError );
         }

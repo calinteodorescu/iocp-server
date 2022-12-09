@@ -15,28 +15,24 @@ class CConnection
 {
 public:
 
-	CConnection(SOCKET socket, uint64_t cid, uint32_t rcvBufferSize);
-	~CConnection();
-	bool CloseRcvContext();
+    CConnection(SOCKET socket, uint64_t cid, uint32_t rcvBufferSize);
+    ~CConnection();
 
-	shared_ptr<CIocpContext> CreateSendContext();
+    bool                       CloseRcvOperation      ( );
+    shared_ptr<CIocpOperation> CreateSendOperation    ( );
+    bool                       HasOutstandingOperation( );
 
-	bool HasOutstandingContext();
+    SOCKET   m_socket;
+    uint64_t m_id;
 
-	SOCKET m_socket;
-	uint64_t m_id;
+    long m_disconnectPending;
+    long m_sendClosePending;
+    long m_rcvClosed;  
 
-	long m_disconnectPending;
-	long m_sendClosePending;
-	long m_rcvClosed;  
-
-	CIocpContext m_rcvContext;
-
-	CSendQueue m_sendQueue;
-
-	CIocpContext m_disconnectContext;
-
-	mutex m_connectionMutex;
+    CIocpOperation m_rcvOperation;
+    CSendQueue     m_sendQueue;
+    CIocpOperation m_disconnectOperation;
+    mutex          m_connectionMutex;
 };
 
 } } // end namespace

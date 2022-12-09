@@ -18,37 +18,37 @@ CSendQueue::~CSendQueue()
 	CloseAllSends();
 }
 
-void CSendQueue::AddSendContext( shared_ptr<CIocpContext> sendContext )
+void CSendQueue::AddSendOperation( shared_ptr<CIocpOperation> sendOperation )
 {
 	mutex::scoped_lock l(m_mutex);
 
-	bool inserted = m_sendContextMap.insert( std::make_pair( sendContext.get(), sendContext ) ).second;
+	bool inserted = m_sendOperationMap.insert( std::make_pair( sendOperation.get(), sendOperation ) ).second;
 
 	assert(true == inserted);
 }
 
-int CSendQueue::RemoveSendContext( CIocpContext* sendContext )
+int CSendQueue::RemoveSendOperation( CIocpOperation* sendOperation )
 {
 	mutex::scoped_lock l(m_mutex);
 
-	m_sendContextMap.erase( sendContext );
+	m_sendOperationMap.erase( sendOperation );
 
-	return m_sendContextMap.size();
+	return m_sendOperationMap.size();
 }
 
-uint32_t CSendQueue::NumOutstandingContext()
+uint32_t CSendQueue::NumOutstandingOperation()
 {
 	mutex::scoped_lock l(m_mutex);
 
-	return m_sendContextMap.size();
+	return m_sendOperationMap.size();
 }
 
 void CSendQueue::CloseAllSends()
 {
 	mutex::scoped_lock l(m_mutex);
 
-	SendContextMap_t::iterator itr = m_sendContextMap.begin();
-	while(m_sendContextMap.end() != itr)
+	SendOperationMap_t::iterator itr = m_sendOperationMap.begin();
+	while(m_sendOperationMap.end() != itr)
 	{
 		if(INVALID_HANDLE_VALUE != itr->second->hEvent)
 		{

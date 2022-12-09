@@ -125,14 +125,14 @@ void sPostAccept( CIOCPServerControl& iocpServerControl )
     DWORD bytesReceived_ = 0;
     DWORD addressSize    = sizeof( sockaddr_in ) + 16;
 
-    if ( iocpServerControl.m_acceptExFn( iocpServerControl.m_listenSocket,                // listen socket
-                                         iocpServerControl.m_acceptContext.m_socket,      // accept socket
-                                         & iocpServerControl.m_acceptContext.m_data[ 0 ], // holds local/remote address
-                                         0,                                               // receive data length = 0 for no receive on accept
-                                         addressSize,                                     // local address length
-                                         addressSize,                                     // remote address length
+    if ( iocpServerControl.m_acceptExFn( iocpServerControl.m_listenSocket,                  // listen socket
+                                         iocpServerControl.m_acceptOperation.m_socket,      // accept socket
+                                         & iocpServerControl.m_acceptOperation.m_data[ 0 ], // holds local/remote address
+                                         0,                                                 // receive data length = 0 for no receive on accept
+                                         addressSize,                                       // local address length
+                                         addressSize,                                       // remote address length
                                          & bytesReceived_,
-                                         & iocpServerControl.m_acceptContext
+                                         & iocpServerControl.m_acceptOperation
                                        ) == FALSE
        )
     {
@@ -151,23 +151,23 @@ void sPostAccept( CIOCPServerControl& iocpServerControl )
                                       0, 
                                       ( DWORD ) 
                                       ( ULONG_PTR ) & iocpServerControl, 
-                                      & iocpServerControl.m_acceptContext
+                                      & iocpServerControl.m_acceptOperation
                                     );
     }
 }
 
 
-int sPostRecv( CIocpContext &iocpContext ) 
+int sPostRecv( CIocpOperation& iocpOperation ) 
 {
     DWORD dwBytes = 0;
     DWORD dwFlags = 0;
 
-    if ( ::WSARecv( iocpContext.m_socket,
-                    &iocpContext.m_wsaBuffer, 
+    if ( ::WSARecv( iocpOperation.m_socket,
+                    & iocpOperation.m_wsaBuffer, 
                     1, 
                     &dwBytes, 
                     &dwFlags, 
-                    &iocpContext, 
+                    & iocpOperation, 
                     NULL
                   ) == SOCKET_ERROR
        )
@@ -179,16 +179,16 @@ int sPostRecv( CIocpContext &iocpContext )
 }
 
 
-int sPostSend( CIocpContext &iocpContext )
+int sPostSend( CIocpOperation &iocpOperation )
 {
     DWORD dwBytes = 0;
 
-    if ( ::WSASend( iocpContext.m_socket, 
-                    & iocpContext.m_wsaBuffer, 
+    if ( ::WSASend( iocpOperation.m_socket, 
+                    & iocpOperation.m_wsaBuffer, 
                     1, 
                     & dwBytes, 
                     0, 
-                    & iocpContext, 
+                    & iocpOperation, 
                     NULL
                   ) == SOCKET_ERROR
        )
@@ -244,17 +244,17 @@ int sPostDisconnect( CIOCPServerControl& iocpServerControl,
                      CConnection&        c
                    )
 {
-    CIocpContext* disconnectContext = new CIocpContext( c.m_socket, 
-                                                        c.m_id, 
-                                                        CIocpContext::Disconnect,
-                                                        0
-                                                      );
+    CIocpOperation* disconnectOperation = new CIocpOperation( c.m_socket, 
+                                                              c.m_id, 
+                                                              CIocpOperation::Disconnect,
+                                                              0
+                                                            );
 
     //Help threads get out of blocking - GetQueuedCompletionStatus()
     if ( ::PostQueuedCompletionStatus( iocpServerControl.m_ioCompletionPort,
                                        0, 
                                        ( ULONG_PTR )    & iocpServerControl, 
-                                       ( LPOVERLAPPED ) disconnectContext
+                                       ( LPOVERLAPPED ) disconnectOperation
                                      ) == FALSE
        )
     {

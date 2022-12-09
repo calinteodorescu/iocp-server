@@ -12,7 +12,7 @@ namespace iocp
 { 
 namespace detail 
 { 
-class CIocpContext;
+class CIocpOperation;
 }
 };
 
@@ -24,20 +24,20 @@ namespace detail
 class CSendQueue
 {
 public:
-	~CSendQueue();
+    ~CSendQueue();
 
-	void AddSendContext   ( ::boost::shared_ptr<CIocpContext> sendContext);
-	int  RemoveSendContext( CIocpContext*			sendContext );
-	void CloseAllSends    ( );
+    void AddSendOperation   ( ::boost::shared_ptr<CIocpOperation> sendOperation);
+    int  RemoveSendOperation( CIocpOperation*                     sendOperation );
+    void CloseAllSends    ( );
 
-	uint32_t NumOutstandingContext();
+    uint32_t NumOutstandingOperation();
 
 private:
-	using SendContextMap_t = std::map< CIocpContext*, shared_ptr<CIocpContext> >;
+    using SendOperationMap_t = std::map< CIocpOperation*, shared_ptr<CIocpOperation> >;
 
-	SendContextMap_t m_sendContextMap;
+    SendOperationMap_t m_sendOperationMap;
 
-	mutex m_mutex;
+    mutex m_mutex;
 };
 
 }

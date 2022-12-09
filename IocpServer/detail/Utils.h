@@ -8,7 +8,7 @@
 #include "../ConnectionInformation.h"
 
 namespace iocp { namespace detail { class CIOCPServerControl; } };
-namespace iocp { namespace detail { class CIocpContext; } };
+namespace iocp { namespace detail { class CIocpOperation; } };
 namespace iocp { namespace detail { class CConnection; } };
 
 namespace iocp
@@ -19,8 +19,8 @@ namespace detail
     SOCKET                sCreateOverlappedSocket  ( void );
     ConnectionInformation sGetConnectionInformation( SOCKET socket );
     void                  sPostAccept              ( CIOCPServerControl& iocpServerControl );
-    int                   sPostRecv                ( CIocpContext&       iocpContext );
-    int                   sPostSend                ( CIocpContext&       iocpContext );
+    int                   sPostRecv                ( CIocpOperation&     iocpOperation );
+    int                   sPostSend                ( CIocpOperation&     iocpOperation );
     int                   sPostDisconnect          ( CIOCPServerControl& iocpServerControl,
                                                      CConnection&        c
                                                    );                    

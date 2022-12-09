@@ -6,7 +6,7 @@
 #pragma once
 
 namespace iocp { namespace detail { class CIOCPServerControl; } }
-namespace iocp { namespace detail { class CIocpContext; } }
+namespace iocp { namespace detail { class CIocpOperation; } }
 
 namespace iocp 
 {
@@ -25,12 +25,12 @@ public:
 
 private:
 
-    void HandleIocpContext      ( CIocpContext& iocpContext, DWORD bytesTransferred );
-    void HandleCompletionFailure( OVERLAPPED*   overlapped,  DWORD bytesTransferred, int error );
-    void HandleReceive          ( CIocpContext& iocpContext, DWORD bytesTransferred );
-    void HandleSend             ( CIocpContext& iocpContext, DWORD bytesTransferred );
-    void HandleAccept           ( CIocpContext& iocpContext, DWORD bytesTransferred );
-    void HandleDisconnect       ( CIocpContext& iocpContext );
+    void HandleIocpOperation    ( CIocpOperation& iocpOperation, DWORD bytesTransferred );
+    void HandleCompletionFailure( OVERLAPPED*     overlapped,    DWORD bytesTransferred, int error );
+    void HandleReceive          ( CIocpOperation& iocpOperation, DWORD bytesTransferred );
+    void HandleSend             ( CIocpOperation& iocpOperation, DWORD bytesTransferred );
+    void HandleAccept           ( CIocpOperation& iocpOperation, DWORD bytesTransferred );
+    void HandleDisconnect       ( CIocpOperation& iocpOperation );
 
 private:
 

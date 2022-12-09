@@ -14,7 +14,7 @@ namespace iocp { namespace detail {
 //! context data, so that we know how to route and operate on them.
 //! The overlapped data structure is very C-like, and requires special
 //! care of start and stops. 
-class CIocpContext : public OVERLAPPED
+class CIocpOperation : public OVERLAPPED
 {
 public:
 
@@ -26,13 +26,13 @@ public:
         Disconnect,
     };
 
-    CIocpContext( SOCKET             socket, 
-                  uint64_t           cid, 
-                  CIocpContext::Type t, 
-                  uint32_t           rcvBufferSize
-                );
+    CIocpOperation( SOCKET               socket, 
+                    uint64_t             cid, 
+                    CIocpOperation::Type t, 
+                    uint32_t             rcvBufferSize
+                  );
 
-    ~CIocpContext( );
+    ~CIocpOperation( );
 
     //! Reset the WSA buffer. Should be called each time the context is used.
     void ResetWsaBuf( );
