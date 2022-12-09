@@ -14,8 +14,8 @@
 
 namespace iocp { namespace detail {
 
-CWorkerThread::CWorkerThread( CIOCPServerControl& iocpServerControl )
-:   m_iocpServerControl( iocpServerControl )
+CWorkerThread::CWorkerThread( CIOCPServerControl& iocpControlAsServer )
+:   m_iocpControlAsServer( iocpControlAsServer )
 {
     m_thread = thread( bind( & CWorkerThread::Run,
                              this
@@ -36,7 +36,7 @@ void CWorkerThread::Run()
         OVERLAPPED* overlapped       = NULL;
         DWORD       bytesTransferred = 0;
 
-        BOOL completionStatus = ::GetQueuedCompletionStatus( m_iocpServerControl.m_ioCompletionPort,
+        BOOL completionStatus = ::GetQueuedCompletionStatus( m_iocpControlAsServer.m_ioCompletionPort,
                                                              & bytesTransferred,
                                                              ( PULONG_PTR ) & key,
                                                              & overlapped,
@@ -72,7 +72,7 @@ void CWorkerThread::HandleReceive( CIocpOperation& rcvOperation,
                                    DWORD           bytesTransferred
                                  )
 {
-    shared_ptr< CConnection > c = m_iocpServerControl.m_connectionManager.GetConnection( rcvOperation.m_cid );
+    shared_ptr< CConnection > c = m_iocpControlAsServer.m_connectionManager.GetConnection( rcvOperation.m_cid );
     if ( c == nullptr )
     {
         assert(false);
@@ -89,12 +89,12 @@ void CWorkerThread::HandleReceive( CIocpOperation& rcvOperation,
         rcvOperation.m_data.resize( bytesTransferred );
         assert(rcvOperation.m_data.size() == bytesTransferred);
 
-        if ( m_iocpServerControl.m_iocpHandler != NULL )
+        if ( m_iocpControlAsServer.m_iocpHandler != NULL )
         {
             // Invoke the callback for the client
-            m_iocpServerControl.m_iocpHandler->OnReceiveData( rcvOperation.m_cid,
-                                                              rcvOperation.m_data
-                                                            );
+            m_iocpControlAsServer.m_iocpHandler->OnReceiveData( rcvOperation.m_cid,
+                                                                rcvOperation.m_data
+                                                              );
         }
     }
 
@@ -107,9 +107,9 @@ void CWorkerThread::HandleReceive( CIocpOperation& rcvOperation,
 
     // 0 bytes transferred, or if a recv context can't be posted to the 
     // IO completion port, that implies the socket at least half-closed.
-    if( ( 0 == bytesTransferred )
+    if( ( bytesTransferred == 0 )
         || 
-        WSA_IO_PENDING != ( lastError = sPostRecv( rcvOperation ) )
+        ( ( lastError = sPostRecv( rcvOperation ) ) != WSA_IO_PENDING )
       )
     {
         uint64_t cid = rcvOperation.m_cid;
@@ -117,11 +117,11 @@ void CWorkerThread::HandleReceive( CIocpOperation& rcvOperation,
         {
             ::shutdown( c->m_socket, SD_RECEIVE );
 
-            if ( m_iocpServerControl.m_iocpHandler != NULL )
+            if ( m_iocpControlAsServer.m_iocpHandler != NULL )
             {
-                m_iocpServerControl.m_iocpHandler->OnClientDisconnect( cid,
-                                                                       lastError
-                                                                     );
+                m_iocpControlAsServer.m_iocpHandler->OnClientDisconnect( cid,
+                                                                         lastError
+                                                                       );
             }
         }
     }
@@ -131,7 +131,7 @@ void CWorkerThread::HandleSend( CIocpOperation& iocpOperation,
                                 DWORD           bytesTransferred
                               )
 {
-    shared_ptr<CConnection> c = m_iocpServerControl.m_connectionManager.GetConnection( iocpOperation.m_cid );
+    shared_ptr<CConnection> c = m_iocpControlAsServer.m_connectionManager.GetConnection( iocpOperation.m_cid );
     if(c == NULL)
     {
         assert(false);
@@ -142,11 +142,11 @@ void CWorkerThread::HandleSend( CIocpOperation& iocpOperation,
 
     if ( bytesTransferred > 0 )
     {
-        if ( m_iocpServerControl.m_iocpHandler != NULL )
+        if ( m_iocpControlAsServer.m_iocpHandler != NULL )
         {
-            m_iocpServerControl.m_iocpHandler->OnSentData( cid,
-                                                           bytesTransferred
-                                                         );
+            m_iocpControlAsServer.m_iocpHandler->OnSentData( cid,
+                                                             bytesTransferred
+                                                           );
         }
     }
     //No bytes transferred, that means send has failed.
@@ -181,7 +181,7 @@ void CWorkerThread::HandleSend( CIocpOperation& iocpOperation,
             // wouldn't know it unless mutex are used. To keep it as 
             // lock-free as possible, the disconnect handler
             // will gracefully handle redundant disconnect context.
-            sPostDisconnect( m_iocpServerControl,
+            sPostDisconnect( m_iocpControlAsServer,
                              * c
                            );
         }
@@ -202,17 +202,17 @@ void CWorkerThread::HandleAccept( CIocpOperation& acceptOperation,
     if ( ::setsockopt( acceptOperation.m_socket, 
                        SOL_SOCKET, 
                        SO_UPDATE_ACCEPT_CONTEXT, 
-                       ( char* ) & m_iocpServerControl.m_listenSocket, 
-                       sizeof( m_iocpServerControl.m_listenSocket )
+                       ( char* ) & m_iocpControlAsServer.m_listenSocket, 
+                       sizeof( m_iocpControlAsServer.m_listenSocket )
                      ) != 0
        )
     {
-        if ( m_iocpServerControl.m_iocpHandler != NULL )
+        if ( m_iocpControlAsServer.m_iocpHandler != NULL )
         {
             // This shouldn't happen, but if it does, report the error. 
             // Since the connection has not been established, it is not necessary
             // to notify the client to remove any connections.
-            m_iocpServerControl.m_iocpHandler->OnServerError( ::WSAGetLastError( ) );
+            m_iocpControlAsServer.m_iocpHandler->OnServerError( ::WSAGetLastError( ) );
         }
     }
     // If the socket is up, allocate the connection and notify the client.
@@ -221,22 +221,22 @@ void CWorkerThread::HandleAccept( CIocpOperation& acceptOperation,
         ConnectionInformation cinfo = sGetConnectionInformation( acceptOperation.m_socket );
 
         shared_ptr< CConnection > c( new CConnection( acceptOperation.m_socket, 
-                                                      m_iocpServerControl.GetNextId(),
-                                                      m_iocpServerControl.m_rcvBufferSize
+                                                      m_iocpControlAsServer.GetNextId(),
+                                                      m_iocpControlAsServer.m_rcvBufferSize
                                                     )
                                    );
 
-        m_iocpServerControl.m_connectionManager.AddConnection( c );
+        m_iocpControlAsServer.m_connectionManager.AddConnection( c );
 
-        sAssociateDevice( ( HANDLE ) c->m_socket,
-                          m_iocpServerControl
-                        );
+        sListenOnIOCPToThisHandle( m_iocpControlAsServer,
+                                   ( HANDLE ) c->m_socket
+                                 );
 
-        if ( m_iocpServerControl.m_iocpHandler != NULL )
+        if ( m_iocpControlAsServer.m_iocpHandler != NULL )
         {
-            m_iocpServerControl.m_iocpHandler->OnNewConnection( c->m_id,
-                                                                cinfo
-                                                              );
+            m_iocpControlAsServer.m_iocpHandler->OnNewConnection( c->m_id,
+                                                                  cinfo
+                                                                );
         }
 
         int lasterror = sPostRecv( c->m_rcvOperation );
@@ -248,7 +248,7 @@ void CWorkerThread::HandleAccept( CIocpOperation& acceptOperation,
         {
             if( true == c->CloseRcvOperation( ) )
             {
-                sPostDisconnect( m_iocpServerControl,
+                sPostDisconnect( m_iocpControlAsServer,
                                  * c
                                );
             }
@@ -264,13 +264,13 @@ void CWorkerThread::HandleAccept( CIocpOperation& acceptOperation,
 
     if ( INVALID_SOCKET != acceptOperation.m_socket )
     {
-        sPostAccept( m_iocpServerControl );
+        sPostAccept( m_iocpControlAsServer );
     }
     else
     {
-        if ( m_iocpServerControl.m_iocpHandler != NULL )
+        if ( m_iocpControlAsServer.m_iocpHandler != NULL )
         {
-            m_iocpServerControl.m_iocpHandler->OnServerError( ::WSAGetLastError( ) );
+            m_iocpControlAsServer.m_iocpHandler->OnServerError( ::WSAGetLastError( ) );
         }
     }
 }
@@ -329,10 +329,10 @@ void CWorkerThread::HandleCompletionFailure( OVERLAPPED* overlapped,
         // timeout.
         assert(WAIT_TIMEOUT != error);
         
-        if(m_iocpServerControl.m_iocpHandler != NULL)
+        if(m_iocpControlAsServer.m_iocpHandler != NULL)
         {
             // GetQueuedCompletionStatus failed. Notify the user on this event.
-            m_iocpServerControl.m_iocpHandler->OnServerError( error );
+            m_iocpControlAsServer.m_iocpHandler->OnServerError( error );
         }
     }
 }
@@ -345,7 +345,7 @@ void CWorkerThread::HandleDisconnect( CIocpOperation &iocpOperation )
     // be deleted manually at all times.
     delete &iocpOperation;
 
-    shared_ptr<CConnection> c = m_iocpServerControl.m_connectionManager.GetConnection(cid);
+    shared_ptr<CConnection> c = m_iocpControlAsServer.m_connectionManager.GetConnection(cid);
     if(c == NULL)
     {
         //! @remark
@@ -362,11 +362,11 @@ void CWorkerThread::HandleDisconnect( CIocpOperation &iocpOperation )
         return;
     }
 
-    if(true == m_iocpServerControl.m_connectionManager.RemoveConnection(cid) )
+    if(true == m_iocpControlAsServer.m_connectionManager.RemoveConnection(cid) )
     {
-        if(m_iocpServerControl.m_iocpHandler != NULL)
+        if(m_iocpControlAsServer.m_iocpHandler != NULL)
         {
-            m_iocpServerControl.m_iocpHandler->OnDisconnect(cid,0);
+            m_iocpControlAsServer.m_iocpHandler->OnDisconnect(cid,0);
         }
     }
 }

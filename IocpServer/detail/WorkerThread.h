@@ -17,7 +17,7 @@ class CWorkerThread
 {
 public:
 
-    explicit CWorkerThread( CIOCPServerControl& iocpServerControl );
+    explicit CWorkerThread( CIOCPServerControl& iocpControlAsServer );
 
     ~CWorkerThread();
 
@@ -34,7 +34,7 @@ private:
 
 private:
 
-    CIOCPServerControl& m_iocpServerControl;
+    CIOCPServerControl& m_iocpControlAsServer;
 
     boost::thread       m_thread;
 };

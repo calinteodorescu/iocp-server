@@ -18,14 +18,14 @@ namespace detail
     int                   sGetNumIocpThreads       ( void );
     SOCKET                sCreateOverlappedSocket  ( void );
     ConnectionInformation sGetConnectionInformation( SOCKET socket );
-    void                  sPostAccept              ( CIOCPServerControl& iocpServerControl );
+    void                  sPostAccept              ( CIOCPServerControl& iocpControlAsServer );
     int                   sPostRecv                ( CIocpOperation&     iocpOperation );
     int                   sPostSend                ( CIocpOperation&     iocpOperation );
-    int                   sPostDisconnect          ( CIOCPServerControl& iocpServerControl,
+    int                   sPostDisconnect          ( CIOCPServerControl& iocpControlAsServer,
                                                      CConnection&        c
                                                    );                    
-    void                  sAssociateDevice         ( HANDLE              h,
-                                                     CIOCPServerControl& iocpServerControl
+    void                  sListenOnIOCPToThisHandle( CIOCPServerControl& iocpControlAsServer,
+                                                     HANDLE              h
                                                    );
     HANDLE                sCreateIocp              ( int                 maxConcurrency = 2 );
     

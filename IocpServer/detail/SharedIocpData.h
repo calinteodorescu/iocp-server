@@ -32,7 +32,6 @@ public:
         , m_currentId       ( 0 )
         , m_acceptExFn      ( NULL )
     {
-
     }
 
     LONGLONG GetNextId( )

@@ -38,7 +38,7 @@ public:
                     numThread
                   );
 
-        m_iocpServerControl.m_iocpHandler = iocpHandler;
+        m_iocpControlAsServer.m_iocpHandler = iocpHandler;
     }
     
     ~CImpl( )
@@ -56,25 +56,25 @@ public:
         {
             if ( 0 == rcvbufferSize )
             {
-                m_iocpServerControl.m_rcvBufferSize = DefaultRcvBufferSize;
+                m_iocpControlAsServer.m_rcvBufferSize = DefaultRcvBufferSize;
             }
             else
             {
-                m_iocpServerControl.m_rcvBufferSize = rcvbufferSize;
+                m_iocpControlAsServer.m_rcvBufferSize = rcvbufferSize;
             }
 
-            m_iocpServerControl.m_shutdownEvent = ::CreateEvent( NULL,  // lpEventAttributes
-                                                                 TRUE,  // bManualReset
-                                                                 FALSE, // bInitialState
-                                                                 NULL
-                                                               ); // lpName
+            m_iocpControlAsServer.m_shutdownEvent = ::CreateEvent( NULL,  // lpEventAttributes
+                                                                   TRUE,  // bManualReset
+                                                                   FALSE, // bInitialState
+                                                                   NULL
+                                                                 ); // lpName
             InitializeWinsock    ( );
             InitializeIocp       ( );
             InitializeThreadPool ( numThread );
             InitializeSocket     ( addressToListenOn,
                                    port
                                  );
-            InitializeAcceptEvent( );
+            InitiateAndArmAccept ( );
         }
         catch (...)
         {
@@ -104,7 +104,7 @@ public:
              ++i
            )
         {
-            m_threadPool.push_back( shared_ptr<detail::CWorkerThread>( new detail::CWorkerThread( m_iocpServerControl ) ) );
+            m_threadPool.push_back( shared_ptr<detail::CWorkerThread>( new detail::CWorkerThread( m_iocpControlAsServer ) ) );
         }
     }
 
@@ -112,9 +112,9 @@ public:
     {
         //Create I/O completion port
         // See http://msdn.microsoft.com/en-us/library/aa363862%28VS.85%29.aspx
-        m_iocpServerControl.m_ioCompletionPort = detail::sCreateIocp( );
+        m_iocpControlAsServer.m_ioCompletionPort = detail::sCreateIocp( );
 
-        if (NULL == m_iocpServerControl.m_ioCompletionPort)
+        if (NULL == m_iocpControlAsServer.m_ioCompletionPort)
         {
             throw CWin32Exception( ::WSAGetLastError( ) );
         }
@@ -135,23 +135,23 @@ public:
 
     void InitializeSocket(uint32_t addressToListenOn, uint16_t portNumber)
     {
-        if (INVALID_SOCKET != m_iocpServerControl.m_listenSocket)
+        if (INVALID_SOCKET != m_iocpControlAsServer.m_listenSocket)
         {
-            ::closesocket(m_iocpServerControl.m_listenSocket);
+            ::closesocket(m_iocpControlAsServer.m_listenSocket);
         }
 
         {
             //Overlapped I/O follows the model established in Windows and can be performed only on 
             //sockets created through the WSASocket function 
-            m_iocpServerControl.m_listenSocket = ::WSASocket( AF_INET, 
-                                                              SOCK_STREAM, 
-                                                              IPPROTO_TCP, 
-                                                              NULL, 
-                                                              0, 
-                                                              WSA_FLAG_OVERLAPPED
-                                                            );
+            m_iocpControlAsServer.m_listenSocket = ::WSASocket( AF_INET, 
+                                                                SOCK_STREAM, 
+                                                                IPPROTO_TCP, 
+                                                                NULL, 
+                                                                0, 
+                                                                WSA_FLAG_OVERLAPPED
+                                                              );
 
-            if ( INVALID_SOCKET == m_iocpServerControl.m_listenSocket ) 
+            if ( INVALID_SOCKET == m_iocpControlAsServer.m_listenSocket ) 
             {
                 throw CWin32Exception( ::WSAGetLastError( ) );
             }
@@ -168,14 +168,14 @@ public:
             }
 
             //Assign local address and port number
-            if ( SOCKET_ERROR == ::bind( m_iocpServerControl.m_listenSocket, 
+            if ( SOCKET_ERROR == ::bind( m_iocpControlAsServer.m_listenSocket, 
                                          ( struct sockaddr* ) & serverAddress, 
                                          sizeof( serverAddress )
                                        )
                )
             {
-                ::closesocket( m_iocpServerControl.m_listenSocket );
-                m_iocpServerControl.m_listenSocket = INVALID_SOCKET;
+                ::closesocket( m_iocpControlAsServer.m_listenSocket );
+                m_iocpControlAsServer.m_listenSocket = INVALID_SOCKET;
 
                 throw CWin32Exception( ::WSAGetLastError( ) );
             }
@@ -186,43 +186,43 @@ public:
         //! If set to SOMAXCONN, the underlying service provider responsible 
         //! for socket s will set the backlog to a maximum reasonable value. 
         //! There is no standard provision to obtain the actual backlog value.
-        if ( SOCKET_ERROR == ::listen( m_iocpServerControl.m_listenSocket,
+        if ( SOCKET_ERROR == ::listen( m_iocpControlAsServer.m_listenSocket,
                                        SOMAXCONN
                                      )
            )
         {
-            ::closesocket( m_iocpServerControl.m_listenSocket );
-            m_iocpServerControl.m_listenSocket = INVALID_SOCKET;
+            ::closesocket( m_iocpControlAsServer.m_listenSocket );
+            m_iocpControlAsServer.m_listenSocket = INVALID_SOCKET;
 
             throw CWin32Exception( ::WSAGetLastError( ) );
         }
 
-        m_iocpServerControl.m_acceptExFn = detail::sLoadAcceptEx( m_iocpServerControl.m_listenSocket );
+        m_iocpControlAsServer.m_acceptExFn = detail::sLoadAcceptEx( m_iocpControlAsServer.m_listenSocket );
 
-        if ( NULL == m_iocpServerControl.m_acceptExFn )
+        if ( NULL == m_iocpControlAsServer.m_acceptExFn )
         {
             throw CWin32Exception( ::GetLastError( ) );
         }
 
-        detail::sAssociateDevice( ( HANDLE ) m_iocpServerControl.m_listenSocket,
-                                  m_iocpServerControl
-                                );
+        detail::sListenOnIOCPToThisHandle( m_iocpControlAsServer,
+                                           ( HANDLE ) m_iocpControlAsServer.m_listenSocket
+                                         );
     }
 
-    void InitializeAcceptEvent()
+    void InitiateAndArmAccept( void )
     {
-        m_iocpServerControl.m_acceptOperation.m_socket = detail::sCreateOverlappedSocket( );
+        m_iocpControlAsServer.m_acceptOperation.m_socket = detail::sCreateOverlappedSocket( );
 
-        detail::sPostAccept( m_iocpServerControl );
+        detail::sPostAccept( m_iocpControlAsServer );
     }
 
     void Uninitialize( )
     {
-        if ( INVALID_HANDLE_VALUE != m_iocpServerControl.m_shutdownEvent )
+        if ( INVALID_HANDLE_VALUE != m_iocpControlAsServer.m_shutdownEvent )
         {
             // Set the shutdown event so all worker threads can quit when
             // they unblock.
-            SetEvent( m_iocpServerControl.m_shutdownEvent );
+            SetEvent( m_iocpControlAsServer.m_shutdownEvent );
         }
 
         //! @remark
@@ -231,7 +231,7 @@ public:
 
         // Close all socket handles to flush out all pending overlapped
         // I/O operation.
-        m_iocpServerControl.m_connectionManager.CloseAllConnections( );
+        m_iocpControlAsServer.m_connectionManager.CloseAllConnections( );
 
         // Give out a NULL completion status to help unblock all worker
         // threads. This is retract all I/O request made to the threads, and
@@ -240,7 +240,7 @@ public:
         for( const auto& thread : m_threadPool )
         {
             //Help threads get out of blocking - GetQueuedCompletionStatus()
-            ::PostQueuedCompletionStatus( m_iocpServerControl.m_ioCompletionPort, 
+            ::PostQueuedCompletionStatus( m_iocpControlAsServer.m_ioCompletionPort, 
                                           0, 
                                           ( DWORD ) NULL, 
                                           NULL
@@ -259,28 +259,28 @@ public:
         //! the result will be queued to the completion port.
         m_threadPool.clear( );
 
-        if ( INVALID_SOCKET != m_iocpServerControl.m_listenSocket )
+        if ( INVALID_SOCKET != m_iocpControlAsServer.m_listenSocket )
         {
-            ::closesocket( m_iocpServerControl.m_listenSocket );
-            m_iocpServerControl.m_listenSocket = INVALID_SOCKET;
+            ::closesocket( m_iocpControlAsServer.m_listenSocket );
+            m_iocpControlAsServer.m_listenSocket = INVALID_SOCKET;
         }
 
-        if ( INVALID_HANDLE_VALUE != m_iocpServerControl.m_shutdownEvent )
+        if ( INVALID_HANDLE_VALUE != m_iocpControlAsServer.m_shutdownEvent )
         {
-            ::CloseHandle( m_iocpServerControl.m_shutdownEvent );
-            m_iocpServerControl.m_shutdownEvent = INVALID_HANDLE_VALUE;
+            ::CloseHandle( m_iocpControlAsServer.m_shutdownEvent );
+            m_iocpControlAsServer.m_shutdownEvent = INVALID_HANDLE_VALUE;
         }
 
-        if ( INVALID_HANDLE_VALUE != m_iocpServerControl.m_ioCompletionPort )
+        if ( INVALID_HANDLE_VALUE != m_iocpControlAsServer.m_ioCompletionPort )
         {
-            ::CloseHandle( m_iocpServerControl.m_ioCompletionPort );
-            m_iocpServerControl.m_ioCompletionPort = INVALID_HANDLE_VALUE;
+            ::CloseHandle( m_iocpControlAsServer.m_ioCompletionPort );
+            m_iocpControlAsServer.m_ioCompletionPort = INVALID_HANDLE_VALUE;
         }
 
-        if ( m_iocpServerControl.m_iocpHandler != NULL )
+        if ( m_iocpControlAsServer.m_iocpHandler != NULL )
         {
-            m_iocpServerControl.m_iocpHandler->OnServerClose( 0 );
-            m_iocpServerControl.m_iocpHandler.reset( );
+            m_iocpControlAsServer.m_iocpHandler->OnServerClose( 0 );
+            m_iocpControlAsServer.m_iocpHandler.reset( );
         }
     }
 
@@ -288,7 +288,7 @@ public:
                std::vector<uint8_t>& data
              )
     {
-        shared_ptr<detail::CConnection> connection = m_iocpServerControl.m_connectionManager.GetConnection(cid);
+        shared_ptr<detail::CConnection> connection = m_iocpControlAsServer.m_connectionManager.GetConnection(cid);
         
         if(connection == NULL)
         {
@@ -318,7 +318,7 @@ public:
 
     void Shutdown( uint64_t cid, int how )
     {
-        shared_ptr<detail::CConnection> connection = m_iocpServerControl.m_connectionManager.GetConnection(cid);
+        shared_ptr<detail::CConnection> connection = m_iocpControlAsServer.m_connectionManager.GetConnection(cid);
 
         if(connection == NULL)
         {
@@ -331,7 +331,7 @@ public:
 
     void Disconnect( uint64_t cid)
     {
-        shared_ptr<detail::CConnection> c = m_iocpServerControl.m_connectionManager.GetConnection( cid );
+        shared_ptr<detail::CConnection> c = m_iocpControlAsServer.m_connectionManager.GetConnection( cid );
 
         if(c == NULL)
         {
@@ -352,12 +352,12 @@ public:
         // lock-free as possible, this disconnect context may be redundant.
         // The disconnect handler will gracefully reject the redundant 
         // disconnect context.
-        detail::sPostDisconnect( m_iocpServerControl, * c );
+        detail::sPostDisconnect( m_iocpControlAsServer, * c );
     }
 
 public:
 
-    detail::CIOCPServerControl m_iocpServerControl;
+    detail::CIOCPServerControl m_iocpControlAsServer;
 
     typedef std::vector < shared_ptr<detail::CWorkerThread>> ThreadPool_t;
 
