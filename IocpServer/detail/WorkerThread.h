@@ -21,7 +21,7 @@ public:
 
     ~CWorkerThread();
 
-    void Run( );
+    void AttachToIOCPAndRun( void );
 
 private:
 

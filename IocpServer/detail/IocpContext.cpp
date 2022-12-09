@@ -25,6 +25,13 @@ CIocpOperation::CIocpOperation( SOCKET             socket,
     switch ( t )
     {
         case OpRcv:
+        {
+            m_data.resize( m_rcvBufferSize );
+
+            ResetWsaBuf( );
+
+            break;
+        }
         case OpAccept:
         {
             m_data.resize( m_rcvBufferSize );

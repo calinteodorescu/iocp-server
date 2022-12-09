@@ -17,7 +17,7 @@ namespace iocp { namespace detail {
 CWorkerThread::CWorkerThread( CIOCPServerControl& iocpControlAsServer )
 :   m_iocpControlAsServer( iocpControlAsServer )
 {
-    m_thread = thread( bind( & CWorkerThread::Run,
+    m_thread = thread( bind( & CWorkerThread::AttachToIOCPAndRun,
                              this
                            )
                      );
@@ -28,7 +28,7 @@ CWorkerThread::~CWorkerThread()
     m_thread.join();
 }
 
-void CWorkerThread::Run()
+void CWorkerThread::AttachToIOCPAndRun( void )
 {
     for( ;; )
     {
