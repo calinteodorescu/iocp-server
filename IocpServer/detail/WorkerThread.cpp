@@ -239,6 +239,7 @@ void CWorkerThread::HandleAccept( CIocpOperation& acceptOperation,
                                                                 );
         }
 
+        // have something to wait for in case the Disconnect happens before any incoming traffic
         int lasterror = sPostRecv( c->m_rcvOperation );
 
         // Failed to post a queue a receive context. It is likely that the
