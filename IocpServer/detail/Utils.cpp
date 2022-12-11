@@ -22,7 +22,7 @@ SOCKET sCreateOverlappedSocket( )
                         NULL, 
                         0, 
                         WSA_FLAG_OVERLAPPED
-                        );
+                      );
 }
 
 //****************************************************************************
@@ -179,7 +179,7 @@ int sPostRecv( CIocpOperation& iocpOperation )
 }
 
 
-int sPostSend( CIocpOperation &iocpOperation )
+int sPostSend( CIocpOperation& iocpOperation )
 {
     DWORD dwBytes = 0;
 

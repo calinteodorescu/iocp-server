@@ -290,13 +290,13 @@ public:
     {
         shared_ptr<detail::CConnection> connection = m_iocpControlAsServer.m_connectionManager.GetConnection(cid);
         
-        if(connection == NULL)
+        if ( connection == NULL )
         {
             throw CIocpException(tstring(_T("Connection does not exist")));
             return;
         }
 
-        shared_ptr<detail::CIocpOperation> sendOperation = connection->CreateSendOperation();
+        shared_ptr<detail::CIocpOperation> sendOperation = connection->CreateAndQueueSendOperation( );
 
         // Take over user's data here and post it to the completion port.
         sendOperation->m_data.swap(data);

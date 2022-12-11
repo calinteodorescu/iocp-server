@@ -2,7 +2,7 @@
 #include "EchoHandler.h"
 using namespace iocp;
 
-void RunNormalServer(bool sendGracefulShutdownMessage)
+void sRunNormalServer(bool sendGracefulShutdownMessage)
 {
     boost::shared_ptr<CEchoHandler> h(
         new CEchoHandler(sendGracefulShutdownMessage)
@@ -18,7 +18,7 @@ void RunNormalServer(bool sendGracefulShutdownMessage)
     delete echoServer;
 }
 
-void RunSlowReader(bool sendGracefulShutdownMessage)
+void sRunSlowReader(bool sendGracefulShutdownMessage)
 {
     boost::shared_ptr< CEchoHandler > h( new CEchoHandler(sendGracefulShutdownMessage ) );
 
@@ -38,8 +38,8 @@ void RunSlowReader(bool sendGracefulShutdownMessage)
 
 int main()
 {
-    RunSlowReader(true);
-    //RunNormalServer(true);
+    sRunSlowReader(true);
+    //sRunNormalServer(true);
 
     return 0;
 }

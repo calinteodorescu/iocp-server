@@ -18,9 +18,9 @@ public:
     CConnection(SOCKET socket, uint64_t cid, uint32_t rcvBufferSize);
     ~CConnection();
 
-    bool                       CloseRcvOperation      ( );
-    shared_ptr<CIocpOperation> CreateSendOperation    ( );
-    bool                       HasOutstandingOperation( );
+    bool                       CloseRcvOperation          ( );
+    shared_ptr<CIocpOperation> CreateAndQueueSendOperation( );
+    bool                       HasOutstandingOperation    ( );
 
     SOCKET   m_socket;
     uint64_t m_id;

@@ -42,18 +42,18 @@ CConnection::~CConnection()
     closesocket(m_socket);
 }
 
-shared_ptr<CIocpOperation> CConnection::CreateSendOperation( )
+shared_ptr<CIocpOperation> CConnection::CreateAndQueueSendOperation( )
 {
-    shared_ptr<CIocpOperation> c( new CIocpOperation( m_socket, 
-                                                      m_id, 
-                                                      CIocpOperation::OpSend,
-                                                      0
-                                                    )
-                                );
+    shared_ptr<CIocpOperation> op( new CIocpOperation( m_socket, 
+                                                       m_id, 
+                                                       CIocpOperation::OpSend,
+                                                       0
+                                                     )
+                                 );
 
-    m_queuedForExecutionSendOperations.QueueForExecutionSendOperation( c );
+    m_queuedForExecutionSendOperations.QueueForExecutionSendOperation( op );
 
-    return c;
+    return op;
 }
 
 bool CConnection::HasOutstandingOperation()
