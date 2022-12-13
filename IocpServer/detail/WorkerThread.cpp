@@ -358,7 +358,7 @@ void CWorkerThread::HandleDisconnect( CIocpOperation &iocpOperation )
         return;
     }
 
-    if(c->HasOutstandingOperation() == true)
+    if ( c->HasOutstandingOperation( ) == true )
     {
         return;
     }

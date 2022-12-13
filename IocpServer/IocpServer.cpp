@@ -310,7 +310,7 @@ public:
             
             // Undo the swap here before throwing. This way, the user's
             // data is untouched and they may proceed to recover.
-            data.swap(sendOperation->m_data);
+            data.swap( sendOperation->m_data );
 
             throw CWin32Exception( lastError );
         }

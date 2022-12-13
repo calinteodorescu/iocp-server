@@ -56,15 +56,15 @@ shared_ptr<CIocpOperation> CConnection::CreateAndQueueSendOperation( )
     return op;
 }
 
-bool CConnection::HasOutstandingOperation()
+bool CConnection::HasOutstandingOperation( )
 {
 
-    if(::InterlockedExchangeAdd(&m_rcvClosed, 0) == 0)
+    if ( ::InterlockedExchangeAdd( & m_rcvClosed, 0 ) == 0 )
     {
         return true;
     }
 
-    if(m_queuedForExecutionSendOperations.NumOutstandingOperation() > 0)
+    if ( m_queuedForExecutionSendOperations.NumOutstandingOperation( ) > 0 )
     {
         return true;
     }
