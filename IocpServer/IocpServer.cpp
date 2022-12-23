@@ -204,9 +204,9 @@ public:
             throw CWin32Exception( ::GetLastError( ) );
         }
 
-        detail::sListenOnIOCPToThisHandle( m_iocpControlAsServer,
-                                           ( HANDLE ) m_iocpControlAsServer.m_listenSocket
-                                         );
+        detail::sListenForThisHandleEventsOnThisIOCP( m_iocpControlAsServer,
+                                                      ( HANDLE ) m_iocpControlAsServer.m_listenSocket
+                                                    );
     }
 
     void InitiateAndArmAccept( void )

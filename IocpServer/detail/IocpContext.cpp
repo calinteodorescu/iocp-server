@@ -47,14 +47,14 @@ CIocpOperation::CIocpOperation( SOCKET             socket,
     memset(this, 0, sizeof(OVERLAPPED));
 }
 
-CIocpOperation::~CIocpOperation()
+CIocpOperation::~CIocpOperation( void )
 {
 }
 
-void CIocpOperation::ResetWsaBuf()
+void CIocpOperation::ResetWsaBuf( void )
 {
     m_wsaBuffer.buf = reinterpret_cast< char* >( & m_data[ 0 ] );
-    m_wsaBuffer.len = static_cast<u_long>( m_data.size( ) * sizeof( m_data[ 0 ] ) );
+    m_wsaBuffer.len = static_cast< u_long >( m_data.size( ) * sizeof( m_data[ 0 ] ) );
 }
 
 }

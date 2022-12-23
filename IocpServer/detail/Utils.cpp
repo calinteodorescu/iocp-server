@@ -199,9 +199,9 @@ int sPostSend( CIocpOperation& iocpOperation )
     return WSA_IO_PENDING;
 }
 
-void sListenOnIOCPToThisHandle( CIOCPServerControl& iocpControlAsServer,
-                                HANDLE              h                       
-                              ) 
+void sListenForThisHandleEventsOnThisIOCP( CIOCPServerControl& iocpControlAsServer,
+                                           HANDLE              h                       
+                                         )
 {
     if ( ::CreateIoCompletionPort( h, 
                                    iocpControlAsServer.m_ioCompletionPort, 

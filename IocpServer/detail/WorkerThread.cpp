@@ -100,8 +100,8 @@ void CWorkerThread::HandleReceive( CIocpOperation& rcvOperation,
 
     // Resize it back to the original buffer size and prepare to post
     // another completion status.
-    rcvOperation.m_data.resize(rcvOperation.m_rcvBufferSize);
-    rcvOperation.ResetWsaBuf();
+    rcvOperation.m_data.resize( rcvOperation.m_rcvBufferSize );
+    rcvOperation.ResetWsaBuf( );
 
     int lastError = NO_ERROR;
 
@@ -228,9 +228,9 @@ void CWorkerThread::HandleAccept( CIocpOperation& acceptOperation,
 
         m_iocpControlAsServer.m_connectionManager.AddConnection( c );
 
-        sListenOnIOCPToThisHandle( m_iocpControlAsServer,
-                                   ( HANDLE ) c->m_socket
-                                 );
+        sListenForThisHandleEventsOnThisIOCP( m_iocpControlAsServer,
+                                              ( HANDLE ) c->m_socket
+                                            );
 
         if ( m_iocpControlAsServer.m_iocpHandler != NULL )
         {
@@ -317,7 +317,7 @@ void CWorkerThread::HandleCompletionFailure( OVERLAPPED* overlapped,
     {
         // Process a failed completed I/O request
         // dwError contains the reason for failure
-        CIocpOperation& iocpOperation = * reinterpret_cast<CIocpOperation*>( overlapped );
+        CIocpOperation& iocpOperation = * reinterpret_cast< CIocpOperation* >( overlapped );
 
         HandleIocpOperation( iocpOperation,
                              bytesTransferred

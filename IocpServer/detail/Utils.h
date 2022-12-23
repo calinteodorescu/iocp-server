@@ -24,9 +24,9 @@ namespace detail
     int                   sPostDisconnect          ( CIOCPServerControl& iocpControlAsServer,
                                                      CConnection&        c
                                                    );                    
-    void                  sListenOnIOCPToThisHandle( CIOCPServerControl& iocpControlAsServer,
-                                                     HANDLE              h
-                                                   );
+    void                  sListenForThisHandleEventsOnThisIOCP( CIOCPServerControl& iocpControlAsServer,
+                                                                HANDLE              h
+                                                              );
     HANDLE                sCreateIocp              ( int                 maxConcurrency = 2 );
     
     LPFN_ACCEPTEX         sLoadAcceptEx            ( SOCKET s );

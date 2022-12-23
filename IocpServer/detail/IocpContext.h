@@ -38,7 +38,7 @@ public:
     void ResetWsaBuf( );
 
     //! the actual buffer that holds all the data
-    std::vector<uint8_t> m_data;
+    std::vector< uint8_t > m_data;
 
     //! ptr to the winsock buffer (which points to m_data)
     WSABUF m_wsaBuffer;
